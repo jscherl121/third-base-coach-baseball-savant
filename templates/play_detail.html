@@ -1,0 +1,352 @@
+{% extends "base.html" %}
+
+{% block title %}Play Detail - {{ play.batting_team }} - Third Base Send Model{% endblock %}
+
+{% block content %}
+<div class="container">
+    <section class="section">
+        <div class="breadcrumb">
+            <a href="{{ url_for('plays') }}">Plays</a> / Play #{{ play.id }}
+        </div>
+
+        <div class="detail-grid">
+            <!-- Main Content -->
+            <div>
+                <!-- Header -->
+                <div class="detail-header">
+                    <div class="team-badge">{{ play.batting_team }}</div>
+                    <div>
+                        <h1 style="margin-bottom: 4px;">{{ play.batting_team }}</h1>
+                        <p style="color: var(--gray-600); margin: 0;">
+                            {{ play.inning }} &middot; {{ play.outs }} out &middot; Score: {{ '+' if play.score_diff > 0 else '' }}{{ play.score_diff }} &middot; {{ play.base_state }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Decision Banner -->
+                <div class="decision-banner {{ 'correct' if play.decision_quality in ['correct_send', 'correct_hold'] else 'wrong' }}">
+                    <div class="decision-banner-icon">
+                        {{ '✓' if play.decision_quality in ['correct_send', 'correct_hold'] else '✗' }}
+                    </div>
+                    <div>
+                        <h3>
+                            {% if play.decision_quality == 'correct_send' %}Correct: Sent Runner
+                            {% elif play.decision_quality == 'correct_hold' %}Correct: Held Runner
+                            {% elif play.decision_quality == 'missed_opportunity' %}Missed Opportunity
+                            {% elif play.decision_quality == 'bad_send' %}Suboptimal Send{% endif %}
+                        </h3>
+                        <p>
+                            {% if play.was_sent %}Coach <strong>sent</strong> the runner.{% else %}Coach <strong>held</strong> the runner at third.{% endif %}
+                            {% if play.negligible_delta %}
+                            Model recommendation: <strong>No Preference</strong>
+                            <span style="font-size: 0.8rem; color: var(--gray-500);">(WP difference too small to matter)</span>
+                            {% else %}
+                            Model recommendation: <strong>{{ 'Send' if play.should_send else 'Hold' }}</strong>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Video and Similar Plays -->
+                <div style="display: flex; gap: var(--space-3); margin-bottom: var(--space-4);">
+                    {% if play.video_link %}
+                    <a href="{{ play.video_link }}" target="_blank" class="video-link" style="flex: 1;">
+                        <div class="video-link-text">Watch Video on Baseball Savant</div>
+                        <div class="video-link-sub">Opens in new tab</div>
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('similar_plays', play_id=play.id) }}" class="video-link" style="flex: 1; background: var(--gray-100); border-color: var(--gray-300);">
+                        <div class="video-link-text" style="color: var(--gray-800);">Find Similar Plays</div>
+                        <div class="video-link-sub">Compare outcomes with similar batted balls</div>
+                    </a>
+                </div>
+
+                <!-- Play Description -->
+                <div class="card" style="margin-bottom: var(--space-5);">
+                    <div class="card-header">
+                        <h3 class="card-title">Play Description</h3>
+                    </div>
+                    <p style="color: var(--gray-700); line-height: 1.6;">{{ play.description }}</p>
+                </div>
+
+                <!-- Key Factors -->
+                {% if factors_send or factors_hold %}
+                <div class="card" style="margin-bottom: var(--space-5);">
+                    <div class="card-header">
+                        <h3 class="card-title">Key Factors</h3>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
+                        <div>
+                            <h4 style="color: var(--success); margin-bottom: var(--space-3); font-size: 0.85rem; text-transform: uppercase;">Favoring Send</h4>
+                            {% if factors_send %}
+                            {% for factor in factors_send %}
+                            <div style="margin-bottom: var(--space-3); padding: var(--space-2) var(--space-3); background: #f0fdf4; border-radius: 6px; border-left: 3px solid var(--success);">
+                                <div style="font-weight: 600; font-size: 0.85rem;">{{ factor.name }}: {{ factor.value }}</div>
+                                <div style="font-size: 0.75rem; color: var(--gray-600);">{{ factor.detail }}</div>
+                                {% if factor.percentile is not none %}
+                                <div style="margin-top: 6px;">
+                                    <div style="display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--gray-500); margin-bottom: 2px;">
+                                        <span>{{ factor.low_label }}</span>
+                                        <span style="color: var(--gray-700); font-weight: 500;">{{ factor.pct_label }} ({{ factor.pct_ordinal }} pctl)</span>
+                                        <span>{{ factor.high_label }}</span>
+                                    </div>
+                                    <div style="position: relative; height: 8px; background: linear-gradient(to right, #dbeafe, #93c5fd, #3b82f6, #1d4ed8); border-radius: 4px;">
+                                        <div style="position: absolute; top: 50%; left: {{ factor.percentile }}%; transform: translate(-50%, -50%); width: 14px; height: 14px; background: white; border: 2.5px solid var(--success); border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"></div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <p style="color: var(--gray-400); font-size: 0.85rem;">No strong factors</p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h4 style="color: var(--danger); margin-bottom: var(--space-3); font-size: 0.85rem; text-transform: uppercase;">Favoring Hold</h4>
+                            {% if factors_hold %}
+                            {% for factor in factors_hold %}
+                            <div style="margin-bottom: var(--space-3); padding: var(--space-2) var(--space-3); background: #fef2f2; border-radius: 6px; border-left: 3px solid var(--danger);">
+                                <div style="font-weight: 600; font-size: 0.85rem;">{{ factor.name }}: {{ factor.value }}</div>
+                                <div style="font-size: 0.75rem; color: var(--gray-600);">{{ factor.detail }}</div>
+                                {% if factor.percentile is not none %}
+                                <div style="margin-top: 6px;">
+                                    <div style="display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--gray-500); margin-bottom: 2px;">
+                                        <span>{{ factor.low_label }}</span>
+                                        <span style="color: var(--gray-700); font-weight: 500;">{{ factor.pct_label }} ({{ factor.pct_ordinal }} pctl)</span>
+                                        <span>{{ factor.high_label }}</span>
+                                    </div>
+                                    <div style="position: relative; height: 8px; background: linear-gradient(to right, #dbeafe, #93c5fd, #3b82f6, #1d4ed8); border-radius: 4px;">
+                                        <div style="position: absolute; top: 50%; left: {{ factor.percentile }}%; transform: translate(-50%, -50%); width: 14px; height: 14px; background: white; border: 2.5px solid var(--danger); border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"></div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <p style="color: var(--gray-400); font-size: 0.85rem;">No strong factors</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if decision_explanation %}
+                    <div style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--gray-200);">
+                        <p style="font-size: 0.85rem; color: var(--gray-700); line-height: 1.6; margin: 0;">
+                            {{ decision_explanation }}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Run Impact Analysis -->
+                <div class="card" style="margin-bottom: var(--space-5);">
+                    <div class="card-header">
+                        <h3 class="card-title">Run Impact Analysis</h3>
+                    </div>
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <div class="metric-value" style="color: {{ 'var(--success)' if play.wp_scenario and play.wp_scenario.runs_delta_calc > 0 else 'var(--danger)' if play.wp_scenario and play.wp_scenario.runs_delta_calc < 0 else 'inherit' }};">{{ play.wp_scenario.runs_delta_calc_str if play.wp_scenario else play.runs_delta }}</div>
+                            <div class="metric-label">Est. Runs Impact</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value" style="color: var(--success)">{{ play.wp_scenario.wp_send_calc_pct if play.wp_scenario else play.wp_send }}</div>
+                            <div class="metric-label">WP if Send</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value" style="color: var(--warning)">{{ play.wp_scenario.wp_if_hold_pct if play.wp_scenario else play.wp_hold }}</div>
+                            <div class="metric-label">WP if Hold</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value" style="color: {{ 'var(--success)' if play.wp_scenario and play.wp_scenario.wp_delta_calc_raw > 0 else 'var(--danger)' if play.wp_scenario and play.wp_scenario.wp_delta_calc_raw < 0 else 'inherit' }}">{{ play.wp_scenario.wp_delta_calc_pct if play.wp_scenario else play.wp_delta }}</div>
+                            <div class="metric-label">WP Delta</div>
+                        </div>
+                    </div>
+                    <div style="font-size: 0.75rem; color: var(--gray-500); margin-top: var(--space-2);">
+                        Run impact estimated using standard conversion: 1 win ≈ 10 runs.
+                    </div>
+
+                    <div style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--gray-200);">
+                        <div class="data-row">
+                            <span class="data-label">Scoring Probability</span>
+                            <span class="data-value">{{ play.p_score }}</span>
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--gray-500); margin: -4px 0 8px 0;">
+                            Model-predicted chance the runner scores if sent. Uses 22 features including batted ball data, fielder positioning, runner delay, and arm strength.
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Runner vs. Throw</span>
+                            <span class="data-value" style="color: {{ 'var(--success)' if play.scoring_window_raw > 0 else 'var(--danger)' }}">{{ play.scoring_window }}s</span>
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--gray-500); margin: -4px 0 8px 0;">
+                            Estimated time gap between runner reaching home and throw arriving. Positive means the runner is predicted to beat the throw.
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Run Value (WP)</span>
+                            <span class="data-value">{{ play.run_value_wp }}</span>
+                        </div>
+                    </div>
+
+                    {% if play.wp_scenario %}
+                    <!-- Why This Recommendation -->
+                    <div style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--gray-200);">
+                        <h4 style="font-size: 0.9rem; margin-bottom: var(--space-3); color: var(--gray-700);">Why {{ 'No Preference' if play.negligible_delta else 'Send' if play.should_send else 'Hold' }}?</h4>
+
+                        <p style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: var(--space-3); line-height: 1.5;">
+                            {% if play.negligible_delta %}
+                            The win probability difference between sending and holding is too small to matter. Either decision is reasonable.
+                            {% elif play.should_send %}
+                            {% if play.wp_scenario.upside > 15 %}
+                            The upside of scoring ({{ play.wp_scenario.upside_str }} pp) far outweighs the risk of getting out, making send the clear choice even with {{ play.p_score }} scoring probability.
+                            {% else %}
+                            Even with only {{ play.p_score }} scoring probability, the expected win probability of sending ({{ play.wp_scenario.wp_send_calc_pct }}) exceeds holding ({{ play.wp_scenario.wp_if_hold_pct }}).
+                            {% endif %}
+                            {% else %}
+                            The risk of getting out isn't worth the potential gain. Holding at {{ play.wp_scenario.wp_if_hold_pct }} WP beats the expected {{ play.wp_scenario.wp_send_calc_pct }} from sending.
+                            {% endif %}
+                        </p>
+
+                        <!-- Three Scenarios -->
+                        <div style="font-size: 0.8rem; color: var(--gray-500); margin-bottom: var(--space-2);">Three possible outcomes:</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-2); margin-bottom: var(--space-3);">
+                            <div style="text-align: center; padding: var(--space-2); background: #f0fdf4; border-radius: 6px; border: 1px solid #bbf7d0;">
+                                <div style="font-size: 1.1rem; font-weight: 600; color: var(--success);">{{ play.wp_scenario.wp_if_score_pct }}</div>
+                                <div style="font-size: 0.7rem; color: var(--gray-600);">If Runner Scores</div>
+                            </div>
+                            <div style="text-align: center; padding: var(--space-2); background: #fef2f2; border-radius: 6px; border: 1px solid #fecaca;">
+                                <div style="font-size: 1.1rem; font-weight: 600; color: var(--danger);">{{ play.wp_scenario.wp_if_out_pct }}</div>
+                                <div style="font-size: 0.7rem; color: var(--gray-600);">If Out at Home</div>
+                            </div>
+                            <div style="text-align: center; padding: var(--space-2); background: #fefce8; border-radius: 6px; border: 1px solid #fef08a;">
+                                <div style="font-size: 1.1rem; font-weight: 600; color: #a16207;">{{ play.wp_scenario.wp_if_hold_pct }}</div>
+                                <div style="font-size: 0.7rem; color: var(--gray-600);">If Runner Held</div>
+                            </div>
+                        </div>
+
+                        <!-- Risk/Reward -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-bottom: var(--space-3);">
+                            <div style="padding: var(--space-2); background: var(--gray-50); border-radius: 6px;">
+                                <div style="font-size: 0.7rem; color: var(--gray-500); margin-bottom: 2px;">Upside if scores vs out</div>
+                                <div style="font-size: 1rem; font-weight: 600; color: var(--success);">{{ play.wp_scenario.upside_str }} pp</div>
+                            </div>
+                            <div style="padding: var(--space-2); background: var(--gray-50); border-radius: 6px;">
+                                <div style="font-size: 0.7rem; color: var(--gray-500); margin-bottom: 2px;">Risk of out vs hold</div>
+                                <div style="font-size: 1rem; font-weight: 600; color: var(--danger);">{{ play.wp_scenario.risk_str }} pp</div>
+                            </div>
+                        </div>
+
+                        <!-- Expected Value Calculation -->
+                        <div style="background: {{ '#f0fdf4' if play.should_send and not play.negligible_delta else '#fefce8' if play.negligible_delta else '#fef2f2' }}; padding: var(--space-3); border-radius: 6px; font-size: 0.85rem;">
+                            <div style="margin-bottom: var(--space-2); font-weight: 600; color: var(--gray-700);">Expected Value Calculation</div>
+                            <div style="font-family: monospace; color: var(--gray-600); line-height: 1.8;">
+                                <div>WP(send) = P(score) × WP(score) + P(out) × WP(out)</div>
+                                <div style="margin-left: var(--space-4);">= {{ play.wp_scenario.p_score_pct }} × {{ play.wp_scenario.wp_if_score_pct }} + {{ (100 - play.wp_scenario.p_score * 100)|round(1) }}% × {{ play.wp_scenario.wp_if_out_pct }}</div>
+                                <div style="margin-left: var(--space-4); font-weight: 600; color: var(--gray-800);">= {{ play.wp_scenario.wp_send_calc_pct }}</div>
+                            </div>
+                            <div style="margin-top: var(--space-2); padding-top: var(--space-2); border-top: 1px solid rgba(0,0,0,0.1);">
+                                <div style="display: flex; justify-content: space-between; font-weight: 600;">
+                                    <span>WP(send) {{ play.wp_scenario.wp_send_calc_pct }}</span>
+                                    <span style="color: {{ 'var(--success)' if play.should_send and not play.negligible_delta else 'var(--gray-500)' if play.negligible_delta else 'var(--danger)' }};">
+                                        {{ '>' if play.should_send and not play.negligible_delta else '≈' if play.negligible_delta else '<' }}
+                                    </span>
+                                    <span>WP(hold) {{ play.wp_scenario.wp_if_hold_pct }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div>
+                <div class="card">
+                    <!-- Batted Ball -->
+                    <div class="sidebar-section">
+                        <h4>Batted Ball</h4>
+                        <div class="data-row">
+                            <span class="data-label">Type</span>
+                            <span class="data-value">{{ play.batted_ball_type }}</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Exit Velocity</span>
+                            <span class="data-value">{{ play.launch_speed }} mph</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Launch Angle</span>
+                            <span class="data-value">{{ play.launch_angle }}°</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Hit Location</span>
+                            <span class="data-value">{{ play.hit_location }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Timing -->
+                    <div class="sidebar-section">
+                        <h4>Timing</h4>
+                        <div class="data-row">
+                            <span class="data-label">Time to Field</span>
+                            <span class="data-value">{{ play.hang_time }}s</span>
+                        </div>
+                        <div style="font-size: 0.7rem; color: var(--gray-500); margin: -4px 0 6px 0;">
+                            Contact → fielder gets ball
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Throw Time</span>
+                            <span class="data-value">{{ play.throw_time }}s</span>
+                        </div>
+                        <div style="font-size: 0.7rem; color: var(--gray-500); margin: -4px 0 6px 0;">
+                            Transfer + flight to home
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Predicted Scoring Window</span>
+                            <span class="data-value" style="color: {{ 'var(--success)' if play.scoring_window_raw > 0 else 'var(--danger)' }}">{{ play.scoring_window }}s</span>
+                        </div>
+                        <div style="font-size: 0.7rem; color: var(--gray-500); margin: -4px 0 0 0;">
+                            Predicted runner margin (+ = beats throw)
+                        </div>
+                    </div>
+
+                    <!-- Players -->
+                    <div class="sidebar-section">
+                        <h4>Players</h4>
+                        <div class="data-row">
+                            <span class="data-label">Runner Speed</span>
+                            <span class="data-value">{{ play.runner_speed }} ft/s</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Fielder Arm</span>
+                            <span class="data-value">{{ play.fielder_arm }} mph</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Throw Distance</span>
+                            <span class="data-value">{{ play.throw_distance }} ft</span>
+                        </div>
+                    </div>
+
+                    <!-- Game Context -->
+                    <div class="sidebar-section">
+                        <h4>Game Context</h4>
+                        <div class="data-row">
+                            <span class="data-label">Leverage Index</span>
+                            <span class="data-value">{{ play.leverage_index }}</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Late & Close</span>
+                            <span class="data-value">{{ 'Yes' if play.late_and_close else 'No' }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Runner -->
+                    <div class="sidebar-section" style="margin-bottom: 0;">
+                        <h4>Runner Behavior</h4>
+                        <div class="data-row">
+                            <span class="data-label">Behavior</span>
+                            <span class="data-value">{{ play.runner_behavior }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

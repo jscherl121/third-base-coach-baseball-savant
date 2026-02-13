@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block title %}Methodology - Third Base Send Model{% endblock %}
+
+{% block content %}
+<div class="container">
+    <section class="section">
+        <div class="page-header">
+            <h1>Model Methodology</h1>
+            <p>Evaluating third base coach send/hold decisions using a Win Probability framework and calibrated scoring probability estimates.</p>
+        </div>
+
+        <!-- The Problem -->
+        <div class="card" style="margin-bottom: var(--space-5);">
+            <div class="card-header">
+                <h3 class="card-title">Motivation</h3>
+            </div>
+            <p style="color: var(--gray-700);">
+                Conventional evaluation of third base coaches relies on outcomes, conflating decision quality with result variance. This model separates the two by estimating the expected Win Probability of each choice before the play resolves.
+            </p>
+        </div>
+
+        <!-- Win Probability Framework -->
+        <div class="card" style="margin-bottom: var(--space-5);">
+            <div class="card-header">
+                <h3 class="card-title">Win Probability Framework</h3>
+            </div>
+            <p style="color: var(--gray-700); margin-bottom: var(--space-4);">
+                Each decision is evaluated against the team's Win Probability rather than Run Expectancy. Win Probability naturally weights each run by game leverage: a run in a tie game in the 9th inning has a substantially larger WP impact than a run with a seven-run lead in the 3rd.
+            </p>
+
+            <div class="formula-block" style="margin-bottom: var(--space-4);">
+                <div style="margin-bottom: var(--space-3);">
+                    <strong>Expected WP if Send:</strong><br>
+                    WP_send = P(score) &times; WP(run scores, runner out of bases) + (1 - P(score)) &times; WP(out recorded at home)
+                </div>
+                <div style="margin-bottom: var(--space-3);">
+                    <strong>Expected WP if Hold:</strong><br>
+                    WP_hold = WP(runner at 3B, batter at 1B, current game state)
+                </div>
+                <div>
+                    <strong>Decision Rule:</strong> Send if WP_send > WP_hold
+                </div>
+            </div>
+
+            <p style="color: var(--gray-700); margin-bottom: var(--space-4);">
+                The WP values for each resulting game state are derived from historical base-out-inning-score state frequencies across all MLB games, providing a stable empirical baseline for comparison.
+            </p>
+        </div>
+
+        <!-- Scoring Probability Model -->
+        <div class="card" style="margin-bottom: var(--space-5);">
+            <div class="card-header">
+                <h3 class="card-title">Scoring Probability Model</h3>
+            </div>
+            <p style="color: var(--gray-700); margin-bottom: var(--space-4);">
+                The central component of the analysis is estimating P(score | sent), the probability that a runner sent home will score safely. This is modeled using logistic regression with isotonic calibration (via <code style="font-size: 0.85rem;">CalibratedClassifierCV</code>), trained on 22 features derived from Statcast data.
+            </p>
+
+            <h4 style="margin-bottom: var(--space-3);">Primary Features</h4>
+            <div class="feature-grid" style="margin-bottom: var(--space-5);">
+                <div class="feature-item">
+                    <div class="feature-icon">S</div>
+                    <div>
+                        <div class="feature-name">Runner Sprint Speed</div>
+                        <div class="feature-desc">Statcast-tracked sprint speed (ft/s)</div>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">A</div>
+                    <div>
+                        <div class="feature-name">Fielder Arm Strength</div>
+                        <div class="feature-desc">Outfielder max arm velocity (mph)</div>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">D</div>
+                    <div>
+                        <div class="feature-name">Throw Distance</div>
+                        <div class="feature-desc">Estimated catch location to home plate (ft)</div>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">B</div>
+                    <div>
+                        <div class="feature-name">Batted Ball Classification</div>
+                        <div class="feature-desc">Ground ball, line drive, or fly ball</div>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">L</div>
+                    <div>
+                        <div class="feature-name">Exit Velocity & Launch Angle</div>
+                        <div class="feature-desc">Batted ball speed (mph) and vertical angle</div>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">T</div>
+                    <div>
+                        <div class="feature-name">Hang Time</div>
+                        <div class="feature-desc">Physics-derived ball flight duration (s)</div>
+                    </div>
+                </div>
+            </div>
+
+            <h4 style="margin-bottom: var(--space-3);">Model Diagnostics</h4>
+            <div class="grid-3" style="margin-bottom: var(--space-4);">
+                <div style="text-align: center;">
+                    <div style="font-size: 1.75rem; font-weight: 700; font-family: var(--font-mono); color: var(--secondary);">0.723</div>
+                    <div style="font-size: 0.75rem; color: var(--gray-600); text-transform: uppercase;">ROC AUC</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 1.75rem; font-weight: 700; font-family: var(--font-mono); color: var(--success);">97.2%</div>
+                    <div style="font-size: 0.75rem; color: var(--gray-600); text-transform: uppercase;">Calibration Match</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 1.75rem; font-weight: 700; font-family: var(--font-mono);">0.000</div>
+                    <div style="font-size: 0.75rem; color: var(--gray-600); text-transform: uppercase;">Mean Calibration Error</div>
+                </div>
+            </div>
+            <p style="color: var(--gray-600); font-size: 0.9rem;">
+                Isotonic calibration ensures that the model's predicted probabilities are well-aligned with observed frequencies. When the model assigns an 85% scoring probability, approximately 85% of comparable plays in the validation set result in a run. Discrimination (ROC AUC of 0.723) is moderate, reflecting the inherent difficulty of separating outcomes in a population where 97% of sent runners score due to strong coach selection effects.
+            </p>
+        </div>
+
+        <!-- Scoring Window Analysis -->
+        <div class="card" style="margin-bottom: var(--space-5);">
+            <div class="card-header">
+                <h3 class="card-title">Scoring Window Analysis</h3>
+            </div>
+            <p style="color: var(--gray-700); margin-bottom: var(--space-4);">
+                To attribute decisions properly, the model distinguishes between the <strong>coach's send/hold decision</strong> and the <strong>runner's positioning and reaction</strong>. The scoring window quantifies whether the runner had sufficient time to score given the physical constraints of the play.
+            </p>
+
+            <div class="formula-block" style="margin-bottom: var(--space-4);">
+                <div style="margin-bottom: var(--space-3);">
+                    <strong>Scoring Window:</strong><br>
+                    Window = Total Play Time - Runner Transit Time
+                </div>
+                <div>
+                    <strong>Components:</strong><br>
+                    Total Play Time = Ball Travel Time + Bounce/Roll Time + Transfer Time (1.0-1.5s) + Throw Time<br>
+                    Runner Transit Time = 180 ft &divide; Runner Sprint Speed + Runner Delay
+                </div>
+            </div>
+
+            <div class="grid-2" style="gap: var(--space-4); margin-bottom: var(--space-4);">
+                <div style="border-left: 3px solid var(--success); padding: var(--space-3); background: #f0fdf4; border-radius: 4px;">
+                    <h4 style="color: var(--success); margin-bottom: var(--space-1);">Positive Window</h4>
+                    <p style="color: var(--gray-600); margin: 0; font-size: 0.9rem;">
+                        The runner has margin to reach home before the throw arrives. The coach's decision is the binding constraint; the runner's execution is feasible.
+                    </p>
+                </div>
+                <div style="border-left: 3px solid var(--danger); padding: var(--space-3); background: #fef2f2; border-radius: 4px;">
+                    <h4 style="color: var(--danger); margin-bottom: var(--space-1);">Negative Window</h4>
+                    <p style="color: var(--gray-600); margin: 0; font-size: 0.9rem;">
+                        The runner cannot reach home before the throw under expected conditions. Sending in these situations carries substantial out risk.
+                    </p>
+                </div>
+            </div>
+
+            <h4 style="margin-bottom: var(--space-3);">Decision Classification</h4>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Classification</th>
+                            <th>Criteria</th>
+                            <th>Attribution</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge badge-success">Correct Send</span></td>
+                            <td>Runner sent; WP_send > WP_hold</td>
+                            <td>Optimal decision</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-success">Correct Hold</span></td>
+                            <td>Runner held; WP_hold &ge; WP_send</td>
+                            <td>Optimal decision</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-danger">Missed Opportunity</span></td>
+                            <td>Runner held; WP_send > WP_hold and runner had positive scoring window</td>
+                            <td>Coach decision error</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-warning">Suboptimal Send</span></td>
+                            <td>Runner sent; WP_hold &ge; WP_send</td>
+                            <td>Coach decision error</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Data Sources -->
+        <div class="card" style="margin-bottom: var(--space-5);">
+            <div class="card-header">
+                <h3 class="card-title">Data Sources</h3>
+            </div>
+            <div class="grid-2" style="gap: var(--space-4); margin-bottom: var(--space-4);">
+                <div>
+                    <h4 style="margin-bottom: var(--space-2);">Statcast (Baseball Savant)</h4>
+                    <ul style="color: var(--gray-700); margin: 0; padding-left: var(--space-4);">
+                        <li>Batted ball exit velocity, launch angle, coordinates</li>
+                        <li>Player sprint speeds (Statcast sprint speed leaderboards)</li>
+                        <li>Outfielder arm strength ratings</li>
+                        <li>Hit distance and field location</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="margin-bottom: var(--space-2);">Derived Metrics</h4>
+                    <ul style="color: var(--gray-700); margin: 0; padding-left: var(--space-4);">
+                        <li>Estimated fielder pickup locations (accounting for ball bounce/roll)</li>
+                        <li>Physics-based ball travel time calculations</li>
+                        <li>Throw difficulty and trajectory estimates</li>
+                        <li>Scoring window computations</li>
+                    </ul>
+                </div>
+            </div>
+            <p style="color: var(--gray-600); font-size: 0.9rem;">
+                The analysis covers all 2025 MLB regular season games. The sample is restricted to plate appearances resulting in a single with at least one runner on second base at the time of the hit.
+            </p>
+        </div>
+
+        <!-- Limitations -->
+        <div class="callout callout-warning">
+            <h4>Limitations</h4>
+            <ul style="margin: 0; padding-left: var(--space-4);">
+                <li style="margin-bottom: var(--space-2);">
+                    <strong>Selection Bias:</strong> Coaches send runners selectively, producing observed success rates above 97%. The model is trained on this selected sample, which compresses the range of observed outcomes.
+                </li>
+                <li style="margin-bottom: var(--space-2);">
+                    <strong>Estimated Inputs:</strong> Fielder catch locations and runner reaction times are estimated from batted ball trajectory data rather than measured directly from player tracking systems.
+                </li>
+                <li style="margin-bottom: var(--space-2);">
+                    <strong>Unmodeled Factors:</strong> Catcher positioning, relay throw mechanics, defensive alignment shifts, and in-game defensive substitutions are not captured in the current feature set.
+                </li>
+                <li>
+                    <strong>Low-Leverage Context:</strong> In games with large score margins, sends classified as suboptimal by WP may be strategically defensible given the low stakes involved.
+                </li>
+            </ul>
+        </div>
+    </section>
+</div>
+{% endblock %}

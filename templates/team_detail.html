@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}{{ team.name }} - Team Analysis - Third Base Send Model{% endblock %}
+
+{% block content %}
+<div class="container">
+    <section class="section">
+        <div class="breadcrumb">
+            <a href="{{ url_for('teams') }}">Teams</a> / {{ team.name }}
+        </div>
+
+        <!-- Team Header -->
+        <div class="detail-header" style="margin-bottom: var(--space-5);">
+            <div class="team-badge" style="width: 80px; height: 80px; font-size: 1.5rem;">{{ team.name }}</div>
+            <div>
+                <h1 style="margin-bottom: 4px;">{{ team.full_name }}</h1>
+                <p style="color: var(--gray-600); margin: 0;">
+                    Third Base Coach Decision Analysis | 2025 Season
+                </p>
+            </div>
+        </div>
+
+        <!-- Key Stats -->
+        <div class="stats-row" style="margin-bottom: var(--space-5);">
+            <div class="stat-card">
+                <div class="stat-value">{{ team.total_plays }}</div>
+                <div class="stat-label">Total Plays</div>
+                {% if league_avg %}
+                <div style="font-size: 0.75rem; margin-top: 4px; color: {{ 'var(--success)' if team.total_plays > league_avg.total_plays else 'var(--gray-500)' }};">
+                    {{ 'Above' if team.total_plays > league_avg.total_plays else 'Below' }} avg ({{ league_avg.total_plays|round(0)|int }})
+                </div>
+                {% endif %}
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" style="color: {{ 'var(--success)' if team.net_runs_raw > 0 else 'var(--danger)' }};">
+                    {{ team.net_runs }}
+                </div>
+                <div class="stat-label">Net Runs</div>
+                {% if league_avg %}
+                <div style="font-size: 0.75rem; margin-top: 4px; color: {{ 'var(--success)' if team.net_runs_raw > league_avg.net_runs else 'var(--danger)' }};">
+                    {{ 'Above' if team.net_runs_raw > league_avg.net_runs else 'Below' }} avg ({{ "%.1f"|format(league_avg.net_runs) }})
+                </div>
+                {% endif %}
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" style="color: var(--success);">{{ team.pct_correct }}</div>
+                <div class="stat-label">Decisions Correct</div>
+                {% if league_avg %}
+                <div style="font-size: 0.75rem; margin-top: 4px; color: {{ 'var(--success)' if team.send_rate_pct > 0 and (team.send_rate_pct * 100 / team.send_rate_pct) > 0 and league_avg.pct_correct > 0 else 'var(--gray-500)' }};">
+                    Lg avg {{ "%.1f%%"|format(league_avg.pct_correct) }}
+                </div>
+                {% endif %}
+            </div>
+            <a href="{{ url_for('plays', team=team.name, decision='mistakes') }}" class="stat-card" style="text-decoration: none; cursor: pointer;">
+                <div class="stat-value" style="color: var(--danger);">{{ team.total_mistakes }}</div>
+                <div class="stat-label">Total Mistakes</div>
+                {% if league_avg %}
+                <div style="font-size: 0.75rem; margin-top: 4px; color: {{ 'var(--success)' if team.total_mistakes < (league_avg.missed_opportunities + league_avg.bad_sends) else 'var(--danger)' }};">
+                    {{ 'Below' if team.total_mistakes < (league_avg.missed_opportunities + league_avg.bad_sends) else 'Above' }} avg ({{ (league_avg.missed_opportunities + league_avg.bad_sends)|round(1) }})
+                </div>
+                {% endif %}
+            </a>
+        </div>
+
+        <div class="grid-2" style="margin-bottom: var(--space-5);">
+            <!-- Decision Breakdown -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Decision Breakdown</h3>
+                </div>
+                <div style="margin-bottom: var(--space-4);">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-2);">
+                        <span style="color: var(--gray-700);">Runners Sent</span>
+                        <span style="font-weight: 600;">{{ team.plays_sent }}</span>
+                    </div>
+                    <div style="background: var(--gray-200); border-radius: 4px; height: 8px; overflow: hidden;">
+                        <div style="background: var(--success); height: 100%; width: {{ team.send_rate_pct }}%;"></div>
+                    </div>
+                </div>
+                <div style="margin-bottom: var(--space-4);">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-2);">
+                        <span style="color: var(--gray-700);">Runners Held</span>
+                        <span style="font-weight: 600;">{{ team.plays_held }}</span>
+                    </div>
+                    <div style="background: var(--gray-200); border-radius: 4px; height: 8px; overflow: hidden;">
+                        <div style="background: var(--secondary); height: 100%; width: {{ 100 - team.send_rate_pct }}%;"></div>
+                    </div>
+                </div>
+                <div style="border-top: 1px solid var(--gray-200); padding-top: var(--space-3);">
+                    <div class="data-row">
+                        <span class="data-label">Send Rate</span>
+                        <span class="data-value">{{ team.send_rate }}</span>
+                    </div>
+                    {% if league_avg %}
+                    <div class="data-row" style="font-size: 0.8rem; color: var(--gray-500);">
+                        <span class="data-label">League Average</span>
+                        <span class="data-value">{{ "%.1f%%"|format(league_avg.send_rate) }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Mistake Breakdown -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Mistake Analysis</h3>
+                </div>
+                <div style="display: flex; gap: var(--space-4); margin-bottom: var(--space-4);">
+                    <a href="{{ url_for('plays', team=team.name, decision='missed') }}" style="flex: 1; text-align: center; padding: var(--space-4); background: #fef2f2; border-radius: 8px; text-decoration: none; cursor: pointer;">
+                        <div style="font-size: 2rem; font-weight: 700; color: var(--danger);">{{ team.missed_opportunities }}</div>
+                        <div style="font-size: 0.75rem; color: var(--gray-600); text-transform: uppercase;">Missed Opportunities</div>
+                    </a>
+                    <a href="{{ url_for('plays', team=team.name, decision='bad_send') }}" style="flex: 1; text-align: center; padding: var(--space-4); background: #fffbeb; border-radius: 8px; text-decoration: none; cursor: pointer;">
+                        <div style="font-size: 2rem; font-weight: 700; color: var(--warning);">{{ team.bad_sends }}</div>
+                        <div style="font-size: 0.75rem; color: var(--gray-600); text-transform: uppercase;">Suboptimal Sends</div>
+                    </a>
+                </div>
+                {% if league_avg %}
+                <div style="display: flex; gap: var(--space-4); margin-bottom: var(--space-4);">
+                    <div style="flex: 1; font-size: 0.8rem; color: var(--gray-500); text-align: center;">
+                        Lg avg {{ league_avg.missed_opportunities|round(1) }}
+                    </div>
+                    <div style="flex: 1; font-size: 0.8rem; color: var(--gray-500); text-align: center;">
+                        Lg avg {{ league_avg.bad_sends|round(1) }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Worst Plays -->
+        <h3 style="margin-bottom: var(--space-4);">Biggest Mistakes</h3>
+        <div class="grid-2" style="margin-bottom: var(--space-5);">
+            <!-- Missed Opportunities -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title" style="color: var(--danger);">Missed Opportunities</h3>
+                </div>
+                {% for play in team.worst_holds %}
+                <a href="{{ url_for('play_detail', play_id=play.id) }}" class="play-item" style="margin-bottom: var(--space-2); padding: var(--space-3); align-items: center;">
+                    <div style="width: 28px; font-size: 0.75rem; color: var(--gray-400); font-weight: 600;">#{{ loop.index }}</div>
+                    <div class="play-info" style="flex: 1;">
+                        <div class="play-desc" style="font-size: 0.85rem;">{{ play.description[:70] }}...</div>
+                        <div class="play-meta">
+                            <span>{{ play.inning }}</span>
+                        </div>
+                    </div>
+                    <div style="text-align: right; min-width: 70px;">
+                        <div style="font-size: 1rem; font-weight: 700; color: var(--danger);">{{ play.wp_cost }}</div>
+                        <div style="font-size: 0.65rem; color: var(--gray-500); text-transform: uppercase;">WP cost</div>
+                    </div>
+                </a>
+                {% else %}
+                <p style="color: var(--gray-500); text-align: center; padding: var(--space-4);">No missed opportunities</p>
+                {% endfor %}
+                {% if team.missed_opportunities > 10 %}
+                <a href="{{ url_for('plays', team=team.name, decision='missed') }}" class="btn btn-secondary" style="width: 100%; justify-content: center; margin-top: var(--space-3);">
+                    View All {{ team.missed_opportunities }}
+                </a>
+                {% endif %}
+            </div>
+
+            <!-- Bad Sends -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title" style="color: var(--warning);">Suboptimal Sends</h3>
+                </div>
+                {% for play in team.worst_sends %}
+                <a href="{{ url_for('play_detail', play_id=play.id) }}" class="play-item" style="margin-bottom: var(--space-2); padding: var(--space-3); align-items: center;">
+                    <div style="width: 28px; font-size: 0.75rem; color: var(--gray-400); font-weight: 600;">#{{ loop.index }}</div>
+                    <div class="play-info" style="flex: 1;">
+                        <div class="play-desc" style="font-size: 0.85rem;">{{ play.description[:70] }}...</div>
+                        <div class="play-meta">
+                            <span>{{ play.inning }}</span>
+                        </div>
+                    </div>
+                    <div style="text-align: right; min-width: 70px;">
+                        <div style="font-size: 1rem; font-weight: 700; color: var(--warning);">{{ play.wp_cost }}</div>
+                        <div style="font-size: 0.65rem; color: var(--gray-500); text-transform: uppercase;">WP cost</div>
+                    </div>
+                </a>
+                {% else %}
+                <p style="color: var(--gray-500); text-align: center; padding: var(--space-4);">No suboptimal sends</p>
+                {% endfor %}
+                {% if team.bad_sends > 10 %}
+                <a href="{{ url_for('plays', team=team.name, decision='bad_send') }}" class="btn btn-secondary" style="width: 100%; justify-content: center; margin-top: var(--space-3);">
+                    View All {{ team.bad_sends }}
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- All Plays Link -->
+        <div style="text-align: center;">
+            <a href="{{ url_for('plays', team=team.name) }}" class="btn btn-primary">
+                View All {{ team.total_plays }} Plays
+            </a>
+        </div>
+    </section>
+</div>
+{% endblock %}

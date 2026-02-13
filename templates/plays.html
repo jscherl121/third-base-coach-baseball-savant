@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Play Explorer - Third Base Send Model{% endblock %}
+
+{% block content %}
+<div class="container">
+    <section class="section">
+        <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <h1>Play Explorer</h1>
+                <p>Browse individual plays with model analysis and video links.</p>
+            </div>
+            <div style="color: var(--gray-600); font-size: 0.9rem;">
+                {{ plays|length }} of {{ "{:,}".format(total_plays) }} plays
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <form action="{{ url_for('plays') }}" method="get" id="filter-form" style="display: contents;">
+                <div class="filter-group">
+                    <label for="team">Team</label>
+                    <select name="team" id="team" class="form-control" onchange="this.form.submit()">
+                        <option value="all" {{ 'selected' if current_team == 'all' else '' }}>All Teams</option>
+                        {% for team in teams %}
+                        <option value="{{ team }}" {{ 'selected' if current_team == team else '' }}>{{ team }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="decision">Decision</label>
+                    <select name="decision" id="decision" class="form-control" onchange="this.form.submit()">
+                        <option value="all" {{ 'selected' if current_decision == 'all' else '' }}>All</option>
+                        <option value="mistakes" {{ 'selected' if current_decision == 'mistakes' else '' }}>All Mistakes</option>
+                        <option value="missed" {{ 'selected' if current_decision == 'missed' else '' }}>Missed Opportunities</option>
+                        <option value="bad_send" {{ 'selected' if current_decision == 'bad_send' else '' }}>Suboptimal Sends</option>
+                        <option value="correct" {{ 'selected' if current_decision == 'correct' else '' }}>Correct</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="situation">Situation</label>
+                    <select name="situation" id="situation" class="form-control" onchange="this.form.submit()">
+                        <option value="all" {{ 'selected' if current_situation == 'all' else '' }}>All Situations</option>
+                        <option value="late_close" {{ 'selected' if current_situation == 'late_close' else '' }}>Late & Close</option>
+                        <option value="high_leverage" {{ 'selected' if current_situation == 'high_leverage' else '' }}>High Leverage (LI &gt; 1.5)</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="outcome">Outcome</label>
+                    <select name="outcome" id="outcome" class="form-control" onchange="this.form.submit()">
+                        <option value="all" {{ 'selected' if current_outcome == 'all' else '' }}>All Outcomes</option>
+                        <option value="scored" {{ 'selected' if current_outcome == 'scored' else '' }}>Scored</option>
+                        <option value="out" {{ 'selected' if current_outcome == 'out' else '' }}>Out at Home</option>
+                        <option value="held" {{ 'selected' if current_outcome == 'held' else '' }}>Held at 3rd</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="sort">Sort</label>
+                    <select name="sort" id="sort" class="form-control" onchange="this.form.submit()">
+                        <option value="wp_delta" {{ 'selected' if current_sort == 'wp_delta' else '' }}>WP Delta</option>
+                        <option value="p_score" {{ 'selected' if current_sort == 'p_score' else '' }}>Score Prob</option>
+                        <option value="scoring_window" {{ 'selected' if current_sort == 'scoring_window' else '' }}>Scoring Window</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="order">Order</label>
+                    <select name="order" id="order" class="form-control" onchange="this.form.submit()">
+                        <option value="desc" {{ 'selected' if current_order == 'desc' else '' }}>High &rarr; Low</option>
+                        <option value="asc" {{ 'selected' if current_order == 'asc' else '' }}>Low &rarr; High</option>
+                    </select>
+                </div>
+
+                <input type="hidden" name="page" value="1">
+            </form>
+        </div>
+
+        <!-- Plays List -->
+        <div class="play-list">
+            {% for play in plays %}
+            <div class="play-item-wrapper">
+                <a href="{{ url_for('play_detail', play_id=play.id) }}" class="play-item">
+                    <div class="play-decision" style="text-align: center; min-width: 70px;">
+                        <div style="background: var(--gray-100); border: 1px solid var(--gray-200); border-radius: 6px; padding: 8px 12px;">
+                            <div style="font-size: 0.85rem; font-weight: 600; color: var(--gray-700);">
+                                {{ 'Sent' if play.was_sent else 'Held' }}
+                            </div>
+                            <div style="font-size: 0.7rem; font-weight: 600; margin-top: 4px; padding: 2px 6px; border-radius: 4px;
+                                background: {{ '#dcfce7' if play.decision_quality in ['correct_send', 'correct_hold'] else '#fee2e2' if play.decision_quality == 'bad_send' else '#fef3c7' }};
+                                color: {{ 'var(--success)' if play.decision_quality in ['correct_send', 'correct_hold'] else 'var(--danger)' if play.decision_quality == 'bad_send' else '#b45309' }};">
+                                {{ 'Correct' if play.decision_quality in ['correct_send', 'correct_hold'] else 'Incorrect' if play.decision_quality == 'bad_send' else 'Missed Opp' }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="play-info">
+                        <div class="play-desc">{{ play.description }}</div>
+                        <div class="play-meta">
+                            <span><strong>{{ play.batting_team }}</strong></span>
+                            <span>{{ play.inning }}</span>
+                            <span>{{ play.outs }} out</span>
+                            <span>{{ '+' if play.score_diff > 0 else '' }}{{ play.score_diff }}</span>
+                            <span>{{ play.batted_ball_type }}</span>
+                        </div>
+                    </div>
+
+                    <div class="play-stats">
+                        <div>
+                            <div class="play-stat-value" style="color: {{ 'var(--success)' if play.wp_delta_raw > 0 else 'var(--danger)' if play.wp_delta_raw < 0 else 'inherit' }}">{{ play.wp_delta }}</div>
+                            <div class="play-stat-label">WP Delta</div>
+                        </div>
+                        <div>
+                            <div class="play-stat-value">{{ play.p_score }}</div>
+                            <div class="play-stat-label">P(Score)</div>
+                        </div>
+                        <div>
+                            <div class="play-stat-value">{{ play.scoring_window }}s</div>
+                            <div class="play-stat-label">Window</div>
+                        </div>
+                        <div>
+                            <div class="play-stat-value">{{ play.runner_speed }}</div>
+                            <div class="play-stat-label">Speed</div>
+                        </div>
+                    </div>
+                </a>
+                {% if play.video_link %}
+                <a href="{{ play.video_link }}" target="_blank" class="play-video-link" onclick="event.stopPropagation();">
+                    Watch on Baseball Savant
+                </a>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="card" style="text-align: center; padding: var(--space-8);">
+                <p style="color: var(--gray-600); margin-bottom: var(--space-4);">No plays found matching your filters.</p>
+                <a href="{{ url_for('plays') }}" class="btn btn-secondary">Clear Filters</a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if total_pages > 1 %}
+        <div class="pagination">
+            {% if current_page > 1 %}
+            <a href="{{ url_for('plays', team=current_team, decision=current_decision, situation=current_situation, outcome=current_outcome, sort=current_sort, order=current_order, page=current_page-1) }}">Prev</a>
+            {% endif %}
+
+            {% for p in range(1, total_pages + 1) %}
+                {% if p == current_page %}
+                <span class="current">{{ p }}</span>
+                {% elif p == 1 or p == total_pages or (p >= current_page - 2 and p <= current_page + 2) %}
+                <a href="{{ url_for('plays', team=current_team, decision=current_decision, situation=current_situation, outcome=current_outcome, sort=current_sort, order=current_order, page=p) }}">{{ p }}</a>
+                {% elif p == current_page - 3 or p == current_page + 3 %}
+                <span style="color: var(--gray-400);">...</span>
+                {% endif %}
+            {% endfor %}
+
+            {% if current_page < total_pages %}
+            <a href="{{ url_for('plays', team=current_team, decision=current_decision, situation=current_situation, outcome=current_outcome, sort=current_sort, order=current_order, page=current_page+1) }}">Next</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
