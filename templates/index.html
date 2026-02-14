@@ -34,6 +34,27 @@
             </a>
         </div>
 
+        <!-- Explore Results Section - Moved Up -->
+        <div class="card" style="margin-bottom: var(--space-6);">
+            <div class="card-header">
+                <h3 class="card-title">Explore the Results</h3>
+            </div>
+            <div class="grid-3">
+                <a href="{{ url_for('teams') }}" class="explore-link">
+                    <h4>Team Rankings</h4>
+                    <p>Compare third base coaching across all 30 teams by Win Probability value.</p>
+                </a>
+                <a href="{{ url_for('plays', decision='missed') }}" class="explore-link">
+                    <h4>Missed Opportunities</h4>
+                    <p>Plays where the coach held but the model recommended sending.</p>
+                </a>
+                <a href="{{ url_for('plays', decision='bad_send') }}" class="explore-link">
+                    <h4>Suboptimal Sends</h4>
+                    <p>Plays where WP favored holding but the runner was sent.</p>
+                </a>
+            </div>
+        </div>
+
         <!-- Main Content Grid -->
         <div class="grid-2" style="margin-bottom: var(--space-6);">
             <!-- Framework -->
@@ -102,27 +123,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Explore Section -->
-        <div class="card" style="margin-bottom: var(--space-6);">
-            <div class="card-header">
-                <h3 class="card-title">Explore the Data</h3>
-            </div>
-            <div class="grid-3">
-                <a href="{{ url_for('teams') }}" class="explore-link">
-                    <h4>Team Rankings</h4>
-                    <p>Compare third base coaching across all 30 teams by Win Probability value.</p>
-                </a>
-                <a href="{{ url_for('plays', decision='missed') }}" class="explore-link">
-                    <h4>Missed Opportunities</h4>
-                    <p>Plays where the coach held but the model recommended sending.</p>
-                </a>
-                <a href="{{ url_for('plays', decision='bad_send') }}" class="explore-link">
-                    <h4>Suboptimal Sends</h4>
-                    <p>Plays where WP favored holding but the runner was sent.</p>
-                </a>
             </div>
         </div>
 
