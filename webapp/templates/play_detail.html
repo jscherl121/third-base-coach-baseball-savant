@@ -203,10 +203,6 @@
                     </div>
                     <div class="metrics-grid" style="grid-template-columns: repeat(4, 1fr);">
                         <div class="metric">
-                            <div class="metric-value" style="color: {{ 'var(--success)' if play.wp_scenario and play.wp_scenario.runs_delta_calc > 0 else 'var(--danger)' if play.wp_scenario and play.wp_scenario.runs_delta_calc < 0 else 'inherit' }};">{{ play.wp_scenario.runs_delta_calc_str if play.wp_scenario else play.runs_delta }}</div>
-                            <div class="metric-label">Est. Runs Impact</div>
-                        </div>
-                        <div class="metric">
                             <div class="metric-value" style="color: var(--success)">{{ play.wp_scenario.wp_send_calc_pct if play.wp_scenario else play.wp_send }}</div>
                             <div class="metric-label">WP if Send</div>
                         </div>
@@ -216,11 +212,15 @@
                         </div>
                         <div class="metric">
                             <div class="metric-value" style="color: {{ 'var(--success)' if play.wp_scenario and play.wp_scenario.wp_delta_calc_raw > 0 else 'var(--danger)' if play.wp_scenario and play.wp_scenario.wp_delta_calc_raw < 0 else 'inherit' }}">{{ play.wp_scenario.wp_delta_calc_pct if play.wp_scenario else play.wp_delta }}</div>
-                            <div class="metric-label">WP Delta</div>
+                            <div class="metric-label">Win Probability Delta</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">{{ "%.2f"|format(play.wp_scenario.runs_delta_calc|abs) if play.wp_scenario else play.runs_delta }}</div>
+                            <div class="metric-label">Est. Runs Impact</div>
                         </div>
                     </div>
                     <div style="font-size: 0.75rem; color: var(--gray-500); margin-top: var(--space-2);">
-                        Win Probability Delta = Win Probability if Send − Win Probability if Hold. Est. Runs Impact converts this to runs (1 win ≈ 10 runs).
+                        Win Probability Delta = WP if Send − WP if Hold. Est. Runs Impact converts the absolute value to runs (1 win ≈ 10 runs).
                     </div>
 
                     <div style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--gray-200);">
