@@ -323,21 +323,21 @@ def extract_player_lists():
         match = re.match(r'^([A-Z][a-zA-Z\.\'\-]+ [A-Z][a-zA-Z\.\'\-]+) (?:singles|doubles|triples|homers)', str(desc))
         return match.group(1) if match else None
 
-    batters = sorted(set(filter(None, singles["des"].apply(get_batter).tolist())))
+    batters = sorted([x for x in set(singles["des"].apply(get_batter).tolist()) if isinstance(x, str)])
 
     # Extract runner names from description
     def get_runner(desc):
         match = re.search(r'([A-Z][a-zA-Z\.\'\-]+ [A-Z][a-zA-Z\.\'\-]+) (?:to 3rd|scores)', str(desc))
         return match.group(1) if match else None
 
-    runners = sorted(set(filter(None, singles["des"].apply(get_runner).tolist())))
+    runners = sorted([x for x in set(singles["des"].apply(get_runner).tolist()) if isinstance(x, str)])
 
     # Extract fielder names from description
     def get_fielder(desc):
         match = re.search(r'(?:left|right|center) fielder ([A-Z][a-zA-Z\.\'\- ]+?)(?:\.|,)', str(desc))
         return match.group(1).strip() if match else None
 
-    fielders = sorted(set(filter(None, singles["des"].apply(get_fielder).tolist())))
+    fielders = sorted([x for x in set(singles["des"].apply(get_fielder).tolist()) if isinstance(x, str)])
 
     return {"batters": batters, "runners": runners, "fielders": fielders}
 
