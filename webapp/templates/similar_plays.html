@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Similar Plays - Third Base Send Model{% endblock %}
+
+{% block content %}
+<div class="container">
+    <section class="section">
+        <div class="breadcrumb">
+            <a href="{{ url_for('plays') }}">Plays</a> / <a href="{{ url_for('play_detail', play_id=ref_play.id) }}">Play #{{ ref_play.id }}</a> / Similar Plays
+        </div>
+
+        <div class="page-header">
+            <h1>Similar Plays</h1>
+            <p>Plays with similar batted ball characteristics, fielder arm strength, and runner speed.</p>
+        </div>
+
+        <!-- Reference Play Summary -->
+        <div class="card" style="margin-bottom: var(--space-5); background: var(--gray-50);">
+            <div class="card-header">
+                <h3 class="card-title">Reference Play #{{ ref_play.id }}</h3>
+            </div>
+            <p style="margin-bottom: var(--space-3); color: var(--gray-700);">{{ ref_play.description }}</p>
+            <div style="display: flex; flex-wrap: wrap; gap: var(--space-4); font-size: 0.85rem;">
+                <div><strong>Exit Velo:</strong> {{ ref_exit_velo|round(1) }} mph</div>
+                <div><strong>Launch Angle:</strong> {{ ref_launch_angle|round(1) }}°</div>
+                <div><strong>Field:</strong> {{ field_name }}</div>
+                <div><strong>Fielder Arm:</strong> {{ ref_arm_strength|round(1) if ref_arm_strength else 'N/A' }} mph</div>
+                <div><strong>Runner Speed:</strong> {{ ref_runner_speed|round(1) }} ft/s</div>
+                <div><strong>Outs:</strong> {{ ref_outs }}</div>
+            </div>
+        </div>
+
+        <!-- Outcome Summary -->
+        {% if total_similar > 0 %}
+        <div class="card" style="margin-bottom: var(--space-5);">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 class="card-title">Outcomes of {{ total_similar }} Similar Plays</h3>
+                {% if current_outcome != 'all' %}
+                <a href="{{ url_for('similar_plays', play_id=ref_play.id) }}" class="btn btn-secondary" style="font-size: 0.75rem; padding: 4px 10px;">Show All</a>
+                {% endif %}
+            </div>
+            <div class="metrics-grid" style="margin-bottom: var(--space-4);">
+                <a href="{{ url_for('similar_plays', play_id=ref_play.id, outcome='scored') }}" class="metric" style="text-decoration: none; cursor: pointer; {{ 'background: #f0fdf4; border-radius: 8px;' if current_outcome == 'scored' else '' }}">
+                    <div class="metric-value" style="color: var(--success);">{{ scored_count }}</div>
+                    <div class="metric-label">Scored</div>
+                </a>
+                <a href="{{ url_for('similar_plays', play_id=ref_play.id, outcome='out') }}" class="metric" style="text-decoration: none; cursor: pointer; {{ 'background: #fef2f2; border-radius: 8px;' if current_outcome == 'out' else '' }}">
+                    <div class="metric-value" style="color: var(--danger);">{{ out_count }}</div>
+                    <div class="metric-label">Out at Home</div>
+                </a>
+                <a href="{{ url_for('similar_plays', play_id=ref_play.id, outcome='held') }}" class="metric" style="text-decoration: none; cursor: pointer; {{ 'background: #fefce8; border-radius: 8px;' if current_outcome == 'held' else '' }}">
+                    <div class="metric-value" style="color: var(--warning);">{{ held_count }}</div>
+                    <div class="metric-label">Held at 3rd</div>
+                </a>
+                <div class="metric">
+                    <div class="metric-value">{{ "%.0f"|format(success_rate) }}%</div>
+                    <div class="metric-label">Success Rate (when sent)</div>
+                </div>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--gray-600); margin: 0;">
+                Of {{ sent_count }} runners sent in similar situations, {{ scored_count }} scored ({{ "%.0f"|format(success_rate) }}% success rate).
+                {% if held_count > 0 %}{{ held_count }} runner{{ 's' if held_count > 1 else '' }} held at third.{% endif %}
+                {% if current_outcome != 'all' %}
+                <strong>Showing: {{ current_outcome_label }}</strong>
+                {% endif %}
+            </p>
+        </div>
+        {% endif %}
+
+        <!-- Similar Plays List -->
+        {% if similar_plays %}
+        <p style="font-size: 0.85rem; color: var(--gray-500); margin-bottom: var(--space-3);">Ordered by similarity (most similar first)</p>
+        <div class="play-list">
+            {% for play in similar_plays %}
+            <div class="play-item-wrapper">
+                <a href="{{ url_for('play_detail', play_id=play.id) }}" class="play-item">
+                    <div class="play-decision">
+                        <div style="font-size: 0.75rem; color: var(--gray-400); margin-bottom: 4px;">#{{ loop.index }}</div>
+                        <div class="decision-icon {{ 'send' if play.was_sent else 'hold' }}">
+                            {{ 'S' if play.was_sent else 'H' }}
+                        </div>
+                        <span class="badge badge-{{ play.outcome_class }}">
+                            {{ play.outcome }}
+                        </span>
+                    </div>
+
+                    <div class="play-info">
+                        <div class="play-desc">{{ play.description }}</div>
+                        <div class="play-meta">
+                            <span><strong>{{ play.batting_team }}</strong></span>
+                            <span>{{ play.inning }}</span>
+                            <span>{{ play.outs }} out</span>
+                            <span>{{ play.launch_speed }} mph</span>
+                            <span>{{ play.launch_angle }}°</span>
+                        </div>
+                    </div>
+
+                    <div class="play-stats">
+                        <div>
+                            <div class="play-stat-value">{{ play.p_score }}</div>
+                            <div class="play-stat-label">P(Score)</div>
+                        </div>
+                        <div>
+                            <div class="play-stat-value">{{ play.scoring_window }}s</div>
+                            <div class="play-stat-label">Window</div>
+                        </div>
+                        <div>
+                            <div class="play-stat-value">{{ play.runner_speed }}</div>
+                            <div class="play-stat-label">Speed</div>
+                        </div>
+                        <div>
+                            <div class="play-stat-value">{{ play.fielder_arm }}</div>
+                            <div class="play-stat-label">Arm</div>
+                        </div>
+                    </div>
+                </a>
+                {% if play.video_link %}
+                <a href="{{ play.video_link }}" target="_blank" class="play-video-link" onclick="event.stopPropagation();">
+                    Watch on Baseball Savant
+                </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card" style="text-align: center; padding: var(--space-8);">
+            <p style="color: var(--gray-600); margin-bottom: var(--space-4);">No similar plays found with these characteristics.</p>
+            <a href="{{ url_for('play_detail', play_id=ref_play.id) }}" class="btn btn-secondary">Back to Play</a>
+        </div>
+        {% endif %}
+
+        <!-- Back Button -->
+        <div style="margin-top: var(--space-5);">
+            <a href="{{ url_for('play_detail', play_id=ref_play.id) }}" class="btn btn-secondary">Back to Play #{{ ref_play.id }}</a>
+        </div>
+    </section>
+</div>
+{% endblock %}

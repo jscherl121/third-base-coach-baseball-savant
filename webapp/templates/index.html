@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Third Base Send Model - Overview{% endblock %}
+
+{% block content %}
+<div class="container">
+    <section class="section">
+        <div class="page-header">
+            <h1>Third Base Coach Decision Analysis</h1>
+            <p style="font-style: italic; color: var(--gray-800); font-size: 1.05rem;">Evaluating third base coach send/hold decisions on singles with a runner on second base, using win probability. 2025 MLB Season.</p>
+        </div>
+
+        <!-- Key Stats -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-value">{{ "{:,}".format(stats.total_plays) }}</div>
+                <div class="stat-label">Plays Analyzed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" style="color: var(--success)">{{ stats.success_rate }}</div>
+                <div class="stat-label">Send Success Rate</div>
+            </div>
+            <a href="{{ url_for('plays', decision='correct') }}" class="stat-card" style="text-decoration: none; cursor: pointer;">
+                <div class="stat-value" style="color: var(--success)">{{ "{:,}".format(stats.correct_decisions_count) }}</div>
+                <div class="stat-label">Correct Decisions</div>
+            </a>
+            <a href="{{ url_for('plays', decision='missed') }}" class="stat-card" style="text-decoration: none; cursor: pointer;">
+                <div class="stat-value" style="color: var(--danger)">{{ stats.missed_opportunities }}</div>
+                <div class="stat-label">Missed Opportunities</div>
+            </a>
+            <a href="{{ url_for('plays', decision='bad_send') }}" class="stat-card" style="text-decoration: none; cursor: pointer;">
+                <div class="stat-value" style="color: var(--warning)">{{ stats.bad_sends }}</div>
+                <div class="stat-label">Suboptimal Sends</div>
+            </a>
+        </div>
+
+        <!-- Explore Results Section - Moved Up -->
+        <div class="card" style="margin-bottom: var(--space-6);">
+            <div class="card-header">
+                <h3 class="card-title">Explore the Results</h3>
+            </div>
+            <div class="grid-3">
+                <a href="{{ url_for('leaderboards') }}" class="explore-link">
+                    <h4>Coach Leaderboards</h4>
+                    <p>Compare third base coaching across all 30 teams by Win Probability value.</p>
+                </a>
+                <a href="{{ url_for('plays', decision='missed') }}" class="explore-link">
+                    <h4>Missed Opportunities</h4>
+                    <p>Plays where the coach held but the model recommended sending.</p>
+                </a>
+                <a href="{{ url_for('plays', decision='bad_send') }}" class="explore-link">
+                    <h4>Suboptimal Sends</h4>
+                    <p>Plays where WP favored holding but the runner was sent.</p>
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid-2" style="margin-bottom: var(--space-6);">
+            <!-- Framework -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Win Probability Framework</h3>
+                </div>
+                <p style="margin-bottom: var(--space-4); color: var(--gray-700);">
+                    Decisions are evaluated using Win Probability, which naturally accounts for game context. A run in a tie game in the 9th is worth more than a run up 5 in the 3rd.
+                </p>
+                <div class="formula-block">
+                    WP_send = P(score) &times; WP(scored) + P(out) &times; WP(out)<br>
+                    <span style="font-size: 0.85rem; color: var(--gray-600);">Expected win probability if the runner is sent, weighted by the chance they score vs. get thrown out.</span><br><br>
+                    WP_hold = WP(runner at 3B)<br>
+                    <span style="font-size: 0.85rem; color: var(--gray-600);">Win probability with the runner staying at third base after the single.</span><br><br>
+                    <strong>Decision: Send if WP_send > WP_hold</strong>
+                </div>
+            </div>
+
+            <!-- Model Inputs -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Model Inputs</h3>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div>
+                        <div style="font-weight: 600; color: #1f2937; margin-bottom: 8px; font-size: 0.85rem;">Runner & Fielder</div>
+                        <ul style="margin: 0; padding-left: 1.25rem; color: #4b5563; font-size: 0.85rem; line-height: 1.7;">
+                            <li>Runner sprint speed</li>
+                            <li>Fielder arm strength</li>
+                            <li>Fielder positioning depth*</li>
+                            <li>Throw distance to home*</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div style="font-weight: 600; color: #1f2937; margin-bottom: 8px; font-size: 0.85rem;">Batted Ball</div>
+                        <ul style="margin: 0; padding-left: 1.25rem; color: #4b5563; font-size: 0.85rem; line-height: 1.7;">
+                            <li>Exit velocity & launch angle</li>
+                            <li>Hit distance & location</li>
+                            <li>Hang time*</li>
+                            <li>Batted ball type</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div style="font-weight: 600; color: #1f2937; margin-bottom: 8px; font-size: 0.85rem;">Timing</div>
+                        <ul style="margin: 0; padding-left: 1.25rem; color: #4b5563; font-size: 0.85rem; line-height: 1.7;">
+                            <li>Time to field the ball*</li>
+                            <li>Transfer time*</li>
+                            <li>Throw flight time*</li>
+                            <li>Runner travel time*</li>
+                        </ul>
+                    </div>
+                </div>
+                <p style="font-size: 0.75rem; color: #6b7280; margin-top: 1rem;">* Estimated from physics or historical averages</p>
+            </div>
+        </div>
+
+        <!-- Model Performance -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Model Performance</h3>
+                <a href="{{ url_for('methodology') }}" class="btn btn-secondary btn-sm">View Methodology</a>
+            </div>
+            <div class="grid-3" style="margin-bottom: var(--space-4);">
+                <div class="perf-metric">
+                    <div class="perf-metric-value" style="color: var(--secondary);">0.723</div>
+                    <div class="perf-metric-label">ROC AUC</div>
+                    <div class="perf-metric-desc">Measures the model's ability to distinguish between plays where the runner would score vs. be thrown out. A score of 1.0 is perfect; 0.5 is no better than random.</div>
+                </div>
+                <div class="perf-metric">
+                    <div class="perf-metric-value" style="color: var(--success);">97.2%</div>
+                    <div class="perf-metric-label">Calibration Match</div>
+                    <div class="perf-metric-desc">Indicates how closely the model's predicted scoring probabilities align with observed outcomes. A 97.2% match means predicted and actual success rates are nearly identical.</div>
+                </div>
+                <div class="perf-metric">
+                    <div class="perf-metric-value">{{ stats.correct_decisions }}</div>
+                    <div class="perf-metric-label">Decisions Correct</div>
+                    <div class="perf-metric-desc">Percentage of plays where the coach's actual send/hold decision matched the model's WP-optimal recommendation.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

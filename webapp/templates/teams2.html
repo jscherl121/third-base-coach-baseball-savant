@@ -1,0 +1,380 @@
+{% extends "base.html" %}
+
+{% block title %}Team Dashboard - Third Base Send Model{% endblock %}
+
+{% block head %}
+<style>
+    .metric-toggle {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+    }
+    .metric-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid #e5e7eb;
+        background: white;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #4b5563;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .metric-btn:hover {
+        background: #f9fafb;
+        border-color: #d1d5db;
+    }
+    .metric-btn.active {
+        background: #2563eb;
+        color: white;
+        border-color: #2563eb;
+    }
+    .metric-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .metric-sub {
+        display: flex;
+        gap: 0.25rem;
+    }
+    .metric-btn-sub {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.8rem;
+        background: #f3f4f6;
+        border-color: #d1d5db;
+    }
+    .metric-btn-sub:hover {
+        background: #e5e7eb;
+    }
+    .metric-btn-sub.active {
+        background: #4f46e5;
+        border-color: #4f46e5;
+        color: white;
+    }
+    .chart-container {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        border: 1px solid #e5e7eb;
+    }
+    .bar-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.6rem;
+        gap: 0.75rem;
+    }
+    .bar-rank {
+        width: 24px;
+        font-size: 0.75rem;
+        color: #9ca3af;
+        text-align: right;
+        flex-shrink: 0;
+    }
+    .bar-team-info {
+        width: 180px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-shrink: 0;
+    }
+    .bar-team-link {
+        text-decoration: none;
+    }
+    .bar-team-link:hover .team-abbr {
+        background: #1f2937;
+    }
+    .bar-coach, .bar-coach-link {
+        font-size: 0.8rem;
+        color: #6b7280;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .bar-coach-link {
+        text-decoration: none;
+        color: #1f2937;
+    }
+    .bar-coach-link:hover {
+        text-decoration: underline;
+    }
+    .bar-track {
+        flex: 1;
+        height: 24px;
+        background: #f3f4f6;
+        border-radius: 4px;
+        position: relative;
+        overflow: hidden;
+    }
+    .bar-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.4s ease-out, background 0.3s;
+        position: absolute;
+    }
+    .bar-center-line {
+        position: absolute;
+        left: 50%;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: #9ca3af;
+        z-index: 1;
+    }
+    .bar-value {
+        width: 65px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-align: left;
+        flex-shrink: 0;
+    }
+    .metric-description {
+        font-size: 0.9rem;
+        color: #6b7280;
+        margin-bottom: 1.5rem;
+    }
+    .chart-legend {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.75rem;
+        margin-top: 1.25rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e5e7eb;
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+    .legend-gradient {
+        width: 100px;
+        height: 12px;
+        border-radius: 3px;
+        background: linear-gradient(to right, #22c55e, #84cc16, #eab308, #f97316, #ef4444);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <section class="section">
+        <div class="page-header">
+            <h1>Coach Leaderboards</h1>
+            <p>Click any coach for detailed analysis.</p>
+        </div>
+
+        <!-- Metric Toggle Buttons -->
+        <div class="metric-toggle">
+            <button class="metric-btn active" data-metric="net_runs">Net Runs</button>
+            <div class="metric-group">
+                <button class="metric-btn" data-metric="mistakes">Total Mistakes</button>
+                <div class="metric-sub" id="mistakes-sub" style="display: none;">
+                    <button class="metric-btn metric-btn-sub" data-metric="missed">Missed Opportunities</button>
+                    <button class="metric-btn metric-btn-sub" data-metric="bad_sends">Bad Sends</button>
+                </div>
+            </div>
+            <button class="metric-btn" data-metric="pct_correct">% Correct</button>
+            <button class="metric-btn" data-metric="send_rate">Send Rate</button>
+            <button class="metric-btn" data-metric="runs_per_play">Runs/Play</button>
+        </div>
+
+        <p class="metric-description" id="metric-desc">
+            Net coaching value: runs gained from correct decisions minus runs lost from mistakes.
+        </p>
+
+        <!-- Chart -->
+        <div class="chart-container">
+            <div id="chart">
+                {% for team in teams %}
+                <div class="bar-row" data-team="{{ team.name }}"
+                     data-coach="{{ team.coach_name }}"
+                     data-net-runs="{{ team.net_runs_raw }}"
+                     data-mistakes="{{ team.total_mistakes }}"
+                     data-missed="{{ team.missed_opportunities }}"
+                     data-bad-sends="{{ team.bad_sends }}"
+                     data-pct-correct="{{ team.pct_correct_raw }}"
+                     data-send-rate="{{ team.send_rate_raw }}"
+                     data-runs-per-play="{{ team.net_runs_per_play_raw }}">
+                    <span class="bar-rank">{{ loop.index }}</span>
+                    <div class="bar-team-info">
+                        <a href="{{ url_for('team_detail', team_code=team.name) }}" class="bar-team-link">
+                            <span class="team-abbr">{{ team.name }}</span>
+                        </a>
+                        <a href="{{ url_for('team_detail', team_code=team.name) }}" class="bar-coach-link">{{ team.coach_name }}</a>
+                    </div>
+                    <div class="bar-track">
+                        <div class="bar-center-line" id="center-line-{{ team.name }}" style="display: none;"></div>
+                        <div class="bar-fill" id="bar-{{ team.name }}"></div>
+                    </div>
+                    <span class="bar-value" id="value-{{ team.name }}"></span>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="chart-legend">
+                <span>Best</span>
+                <div class="legend-gradient"></div>
+                <span>Worst</span>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const metricDescriptions = {
+    net_runs: "Net coaching value: runs gained from correct decisions minus runs lost from mistakes.",
+    mistakes: "Total coaching errors: missed opportunities plus bad sends. Lower is better.",
+    missed: "Plays where the coach held but the model recommended sending. Lower is better.",
+    bad_sends: "Plays where the coach sent but the model recommended holding. Lower is better.",
+    pct_correct: "Percentage of plays where the coach's decision matched the model's recommendation.",
+    send_rate: "Percentage of plays where the coach sent the runner. Neither high nor low is inherently better.",
+    runs_per_play: "Net runs divided by total plays. Normalizes for sample size."
+};
+
+const metricConfig = {
+    net_runs: { format: v => (v >= 0 ? '+' : '') + v.toFixed(1), higherIsBetter: true },
+    mistakes: { format: v => v.toString(), higherIsBetter: false },
+    missed: { format: v => v.toString(), higherIsBetter: false },
+    bad_sends: { format: v => v.toString(), higherIsBetter: false },
+    pct_correct: { format: v => (v * 100).toFixed(1) + '%', higherIsBetter: true },
+    send_rate: { format: v => (v * 100).toFixed(1) + '%', higherIsBetter: null },
+    runs_per_play: { format: v => (v >= 0 ? '+' : '') + v.toFixed(3), higherIsBetter: true }
+};
+
+// Get solid color based on rank (0 = best = green, 1 = worst = red)
+function getRankColor(ratio) {
+    // ratio: 0 = best, 1 = worst
+    const colors = [
+        { r: 34, g: 197, b: 94 },   // green #22c55e
+        { r: 132, g: 204, b: 22 },  // lime #84cc16
+        { r: 234, g: 179, b: 8 },   // yellow #eab308
+        { r: 249, g: 115, b: 22 },  // orange #f97316
+        { r: 239, g: 68, b: 68 }    // red #ef4444
+    ];
+
+    const segment = ratio * (colors.length - 1);
+    const idx = Math.min(Math.floor(segment), colors.length - 2);
+    const t = segment - idx;
+
+    const c1 = colors[idx];
+    const c2 = colors[idx + 1];
+
+    const r = Math.round(c1.r + (c2.r - c1.r) * t);
+    const g = Math.round(c1.g + (c2.g - c1.g) * t);
+    const b = Math.round(c1.b + (c2.b - c1.b) * t);
+
+    return `rgb(${r}, ${g}, ${b})`;
+}
+
+function updateChart(metric) {
+    const rows = document.querySelectorAll('.bar-row');
+    const config = metricConfig[metric];
+
+    // Collect values
+    let values = [];
+    rows.forEach(row => {
+        let val;
+        switch(metric) {
+            case 'net_runs': val = parseFloat(row.dataset.netRuns); break;
+            case 'mistakes': val = parseInt(row.dataset.mistakes); break;
+            case 'missed': val = parseInt(row.dataset.missed); break;
+            case 'bad_sends': val = parseInt(row.dataset.badSends); break;
+            case 'pct_correct': val = parseFloat(row.dataset.pctCorrect); break;
+            case 'send_rate': val = parseFloat(row.dataset.sendRate); break;
+            case 'runs_per_play': val = parseFloat(row.dataset.runsPerPlay); break;
+        }
+        values.push({ row, val: isNaN(val) ? 0 : val });
+    });
+
+    // Sort: best first (or by value descending if neutral)
+    if (config.higherIsBetter === true) {
+        values.sort((a, b) => b.val - a.val);
+    } else if (config.higherIsBetter === false) {
+        values.sort((a, b) => a.val - b.val);
+    } else {
+        // Neutral metric - sort by value descending
+        values.sort((a, b) => b.val - a.val);
+    }
+
+    // Re-order DOM and update ranks
+    const chart = document.getElementById('chart');
+    values.forEach(({ row }, index) => {
+        chart.appendChild(row);
+        row.querySelector('.bar-rank').textContent = index + 1;
+    });
+
+    // Find max for scaling
+    const maxVal = Math.max(...values.map(v => Math.abs(v.val)), 0.001);
+    const numTeams = values.length;
+
+    // Update bars
+    values.forEach(({ row, val }, index) => {
+        const team = row.dataset.team;
+        const bar = document.getElementById('bar-' + team);
+        const valueEl = document.getElementById('value-' + team);
+        const centerLine = document.getElementById('center-line-' + team);
+
+        // Calculate bar width (percentage of max)
+        const pct = (Math.abs(val) / maxVal) * 100;
+        bar.style.width = pct + '%';
+        bar.style.left = '0';
+
+        // Hide center line (not using diverging anymore)
+        centerLine.style.display = 'none';
+
+        // Color based on rank (best = green, worst = red) or neutral blue
+        const ratio = index / (numTeams - 1);
+        if (config.higherIsBetter === null) {
+            // Neutral metric - use blue gradient
+            bar.style.background = '#3b82f6';
+            valueEl.style.color = '#1e40af';
+        } else {
+            bar.style.background = getRankColor(ratio);
+            // Value text color
+            if (config.higherIsBetter) {
+                valueEl.style.color = val >= 0 ? '#16a34a' : '#dc2626';
+            } else {
+                valueEl.style.color = '#4b5563';
+            }
+        }
+
+        valueEl.textContent = config.format(val);
+    });
+
+    // Update description
+    document.getElementById('metric-desc').textContent = metricDescriptions[metric];
+}
+
+// Toggle button handlers
+const mistakesSub = document.getElementById('mistakes-sub');
+const mistakesMetrics = ['mistakes', 'missed', 'bad_sends'];
+
+document.querySelectorAll('.metric-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const metric = this.dataset.metric;
+
+        // Handle sub-button visibility
+        if (metric === 'mistakes') {
+            mistakesSub.style.display = 'flex';
+        } else if (!mistakesMetrics.includes(metric)) {
+            mistakesSub.style.display = 'none';
+        }
+
+        // Update active states
+        document.querySelectorAll('.metric-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+
+        // If selecting a sub-metric, also highlight the parent
+        if (metric === 'missed' || metric === 'bad_sends') {
+            document.querySelector('[data-metric="mistakes"]').classList.add('active');
+        }
+
+        updateChart(metric);
+    });
+});
+
+// Initial render
+updateChart('net_runs');
+</script>
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Team Rankings - Third Base Send Model{% endblock %}
+
+{% block content %}
+<div class="container">
+    <section class="section">
+        <div class="page-header">
+            <h1>Team Rankings</h1>
+            <p>Third base coach decision quality by estimated runs added/lost. Click any team for detailed analysis.</p>
+        </div>
+
+        <!-- Column Definitions -->
+        <div class="callout callout-info" style="margin-bottom: var(--space-5);">
+            <h4>Column Definitions</h4>
+            <ul>
+                <li><strong>Net Runs:</strong> Overall coaching value = (runs from correct decisions) - (runs lost from mistakes).</li>
+                <li><strong>Net Runs/Play:</strong> Net Runs divided by total plays. Normalizes for team sample size.</li>
+                <li><strong>Missed:</strong> Coach held when model favored sending and runner was in position.</li>
+                <li><strong>Bad Sends:</strong> Coach sent when model favored holding (often in blowout games).</li>
+            </ul>
+        </div>
+
+        <!-- Rankings Table -->
+        <div class="table-wrapper">
+            <table id="teams-table">
+                <thead>
+                    <tr>
+                        <th style="width: 50px; text-align: center;">#</th>
+                        <th class="sortable" data-sort="name">Team</th>
+                        <th class="sortable num" data-sort="plays">Plays</th>
+                        <th class="sortable num" data-sort="correct">% Correct</th>
+                        <th class="sortable num" data-sort="send_rate">Send Rate</th>
+                        <th class="sortable num sort-desc" data-sort="net_runs">Net Runs</th>
+                        <th class="sortable num" data-sort="net_runs_per_play">Net Runs/Play</th>
+                        <th class="sortable num" data-sort="missed">Missed</th>
+                        <th class="sortable num" data-sort="bad_sends">Bad Sends</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for team in teams %}
+                    <tr class="clickable" onclick="window.location.href='{{ url_for('team_detail', team_code=team.name) }}'">
+                        <td style="text-align: center; color: var(--gray-500);">{{ loop.index }}</td>
+                        <td>
+                            <div class="team-cell">
+                                <span class="team-abbr">{{ team.name }}</span>
+                            </div>
+                        </td>
+                        <td class="num">{{ team.total_plays }}</td>
+                        <td class="num">{{ team.pct_correct }}</td>
+                        <td class="num">{{ team.send_rate }}</td>
+                        <td class="num">
+                            <span style="color: {{ 'var(--success)' if team.net_runs_raw > 0 else 'var(--danger)' if team.net_runs_raw < 0 else 'inherit' }}; font-weight: 600;">
+                                {{ team.net_runs }}
+                            </span>
+                        </td>
+                        <td class="num">
+                            <span style="color: {{ 'var(--success)' if team.net_runs_per_play_raw > 0 else 'var(--danger)' if team.net_runs_per_play_raw < 0 else 'inherit' }};">
+                                {{ team.net_runs_per_play }}
+                            </span>
+                        </td>
+                        <td class="num">
+                            {% if team.missed_opportunities > 0 %}
+                            <span style="color: var(--danger);">{{ team.missed_opportunities }}</span>
+                            {% else %}
+                            <span style="color: var(--gray-400);">0</span>
+                            {% endif %}
+                        </td>
+                        <td class="num">
+                            {% if team.bad_sends > 0 %}
+                            <span style="color: var(--warning);">{{ team.bad_sends }}</span>
+                            {% else %}
+                            <span style="color: var(--gray-400);">0</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.sortable').forEach(header => {
+    header.addEventListener('click', function() {
+        const table = document.getElementById('teams-table');
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        const sortKey = this.dataset.sort;
+        const isDesc = this.classList.contains('sort-desc');
+        const isAsc = this.classList.contains('sort-asc');
+        // Mistakes columns: lower is better, so default to ascending
+        const lowIsBetter = ['missed', 'bad_sends'].includes(sortKey);
+        let newDir;
+        if (lowIsBetter) {
+            newDir = isAsc ? 'desc' : 'asc';
+        } else {
+            newDir = isDesc ? 'asc' : 'desc';
+        }
+
+        document.querySelectorAll('.sortable').forEach(h => {
+            h.classList.remove('sort-asc', 'sort-desc');
+        });
+        this.classList.add('sort-' + newDir);
+
+        const colIndex = {name: 1, plays: 2, correct: 3, send_rate: 4, net_runs: 5, net_runs_per_play: 6, missed: 7, bad_sends: 8}[sortKey];
+
+        rows.sort((a, b) => {
+            const aVal = a.cells[colIndex].textContent.trim();
+            const bVal = b.cells[colIndex].textContent.trim();
+            const aNum = parseFloat(aVal.replace('%', ''));
+            const bNum = parseFloat(bVal.replace('%', ''));
+            if (!isNaN(aNum) && !isNaN(bNum)) {
+                return newDir === 'asc' ? aNum - bNum : bNum - aNum;
+            }
+            return newDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+        });
+
+        rows.forEach((row, i) => {
+            row.cells[0].textContent = i + 1;
+            tbody.appendChild(row);
+        });
+    });
+});
+</script>
+{% endblock %}
