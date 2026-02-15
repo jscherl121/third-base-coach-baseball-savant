@@ -101,7 +101,7 @@
                     <h3 class="card-title">How the Model Works</h3>
                 </div>
                 <p style="color: var(--gray-700); margin-bottom: var(--space-4);">
-                    On a single with a runner on second base, the third base coach must decide in real-time whether to send the runner home or hold them at third. This model reconstructs that decision using Statcast data and physics-based timing estimates to calculate the Win Probability-optimal choice, then evaluates whether the coach's actual decision aligned with that recommendation.
+                    On a single with a runner on second base, the third base coach must decide in real-time whether to send the runner home or hold them at third. This model reconstructs that decision using Statcast data and physics-based timing estimates to calculate the win probability-optimal choice, then evaluates whether the coach's actual decision aligned with that recommendation.
                 </p>
 
                 <!-- Pipeline Visual -->
@@ -178,7 +178,7 @@
                     <h3 class="card-title">Step 2: Calculate Win Probability for Each Outcome</h3>
                 </div>
                 <p style="color: var(--gray-700); margin-bottom: var(--space-4);">
-                    Next, we look up the <strong>Win Probability</strong> for each possible outcome using historical MLB data. This is where game context matters: the same run is worth more in a tie game in the 9th than up 5 in the 3rd.
+                    Next, we look up the <strong>win probability</strong> for each possible outcome using historical MLB data. This is where game context matters: the same run is worth more in a tie game in the 9th than up 5 in the 3rd.
                 </p>
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: var(--space-4);">
@@ -350,11 +350,10 @@
             <div class="callout" style="margin-bottom: var(--space-5);">
                 <h3>Time to Field</h3>
                 <p><strong>What it is:</strong> Time from bat contact until the fielder picks up the ball.</p>
-                <p><strong>How it's calculated:</strong> Different approaches based on launch angle:</p>
+                <p><strong>How it's calculated:</strong> Two components are combined:</p>
                 <ul>
-                    <li><strong>Ground balls (LA < 10°):</strong> Ball lands quickly then rolls. Total = distance ÷ ground speed.</li>
-                    <li><strong>Line drives (LA 10-25°):</strong> Fastest balls—horizontal velocity dominates.</li>
-                    <li><strong>Fly balls (LA > 25°):</strong> Projectile motion physics determines hang time.</li>
+                    <li><strong>Ball trajectory:</strong> Based on launch angle—ground balls land quickly then roll, line drives travel fast horizontally, fly balls follow projectile motion physics.</li>
+                    <li><strong>Fielder movement:</strong> Starting from the outfielder's average positioning depth, we calculate where they can run during the ball's flight time (accounting for reaction time and sprint speed) to determine the intercept point.</li>
                 </ul>
             </div>
 

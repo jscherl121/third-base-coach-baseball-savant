@@ -7,7 +7,7 @@
     <section class="section">
         <div class="page-header">
             <h1>Third Base Coach Decision Analysis</h1>
-            <p style="font-style: italic; color: var(--gray-800); font-size: 1.05rem;">Evaluating third base coach send/hold decisions on singles with a runner on second base, using win probability. 2025 MLB Season.</p>
+            <p style="font-style: italic; color: var(--gray-800); font-size: 1.05rem;">Evaluating third base coach send/hold decisions on singles with a runner on second base using win probability. 2025 MLB Season.</p>
         </div>
 
         <!-- Key Stats -->
@@ -42,7 +42,7 @@
             <div class="grid-3">
                 <a href="{{ url_for('leaderboards') }}" class="explore-link">
                     <h4>Coach Leaderboards</h4>
-                    <p>Compare third base coaching across all 30 teams by Win Probability value.</p>
+                    <p>Compare third base coaching across all 30 teams by win probability value.</p>
                 </a>
                 <a href="{{ url_for('plays', decision='missed') }}" class="explore-link">
                     <h4>Missed Opportunities</h4>
@@ -50,7 +50,7 @@
                 </a>
                 <a href="{{ url_for('plays', decision='bad_send') }}" class="explore-link">
                     <h4>Suboptimal Sends</h4>
-                    <p>Plays where WP favored holding but the runner was sent.</p>
+                    <p>Plays where win probability favored holding but the runner was sent.</p>
                 </a>
             </div>
         </div>
