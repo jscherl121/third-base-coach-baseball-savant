@@ -613,6 +613,12 @@ def methodology():
     return render_template("methodology.html")
 
 
+@app.route("/ideal-state")
+def ideal_state():
+    """Ideal state page comparing current model to player tracking version."""
+    return render_template("ideal_state.html")
+
+
 @app.route("/calculations")
 def calculations():
     """Calculations page explaining how each factor is calculated."""
