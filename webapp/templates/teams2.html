@@ -175,6 +175,7 @@
             <button class="metric-btn" data-metric="pct_correct">% Correct</button>
             <button class="metric-btn" data-metric="send_rate">Send Rate</button>
             <button class="metric-btn" data-metric="runs_per_play">Runs/Play</button>
+            <button class="metric-btn sort-dir-btn" id="sort-dir-btn" title="Reverse sort order">↑↓</button>
         </div>
 
         <p class="metric-description" id="metric-desc">
@@ -210,7 +211,7 @@
                 {% endfor %}
             </div>
 
-            <div class="chart-legend">
+            <div class="chart-legend" id="chart-legend">
                 <span>Best</span>
                 <div class="legend-gradient"></div>
                 <span>Worst</span>
@@ -242,6 +243,9 @@ const metricConfig = {
     runs_per_play: { format: v => (v >= 0 ? '+' : '') + v.toFixed(3), higherIsBetter: true }
 };
 
+let currentMetric = 'net_runs';
+let sortReversed = false;
+
 // Get solid color based on rank (0 = best = green, 1 = worst = red)
 function getRankColor(ratio) {
     // ratio: 0 = best, 1 = worst
@@ -267,9 +271,20 @@ function getRankColor(ratio) {
     return `rgb(${r}, ${g}, ${b})`;
 }
 
-function updateChart(metric) {
+function updateChart(metric, reversed = false) {
+    currentMetric = metric;
+    sortReversed = reversed;
+
     const rows = document.querySelectorAll('.bar-row');
     const config = metricConfig[metric];
+    const legend = document.getElementById('chart-legend');
+
+    // Hide legend for send_rate (neutral metric)
+    if (metric === 'send_rate') {
+        legend.style.display = 'none';
+    } else {
+        legend.style.display = 'flex';
+    }
 
     // Collect values
     let values = [];
@@ -295,6 +310,11 @@ function updateChart(metric) {
     } else {
         // Neutral metric - sort by value descending
         values.sort((a, b) => b.val - a.val);
+    }
+
+    // Reverse if requested
+    if (reversed) {
+        values.reverse();
     }
 
     // Re-order DOM and update ranks
@@ -370,8 +390,15 @@ document.querySelectorAll('.metric-btn').forEach(btn => {
             document.querySelector('[data-metric="mistakes"]').classList.add('active');
         }
 
+        sortReversed = false; // Reset sort direction when changing metric
         updateChart(metric);
     });
+});
+
+// Sort direction toggle
+document.getElementById('sort-dir-btn').addEventListener('click', function() {
+    sortReversed = !sortReversed;
+    updateChart(currentMetric, sortReversed);
 });
 
 // Initial render

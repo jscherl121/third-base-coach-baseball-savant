@@ -274,7 +274,7 @@
                             <span class="data-value">{{ play.hit_location }}</span>
                         </div>
                         <div class="data-row">
-                            <span class="data-label">Throw Distance</span>
+                            <span class="data-label">Throw Distance (est.)</span>
                             <span class="data-value">{{ play.throw_distance }} ft</span>
                         </div>
                     </div>
@@ -307,9 +307,15 @@
                             <span class="data-label">Time to Field (est.)</span>
                             <span class="data-value">{{ play.hang_time }}s</span>
                         </div>
+                        <div style="font-size: 0.7rem; color: var(--gray-500); margin: -4px 0 8px 0;">
+                            Time from bat contact until fielder picks up the ball.
+                        </div>
                         <div class="data-row">
                             <span class="data-label">Throw Time (est.)</span>
                             <span class="data-value">{{ play.throw_time }}s</span>
+                        </div>
+                        <div style="font-size: 0.7rem; color: var(--gray-500); margin: -4px 0 8px 0;">
+                            Time from fielding until throw reaches home plate.
                         </div>
                         <div class="data-row">
                             <span class="data-label">Scoring Window (est.)</span>
