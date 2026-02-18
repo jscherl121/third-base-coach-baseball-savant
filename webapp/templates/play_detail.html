@@ -308,21 +308,21 @@
                             <span class="data-value">{{ play.hang_time }}s</span>
                         </div>
                         <div style="font-size: 0.7rem; color: var(--gray-500); margin: -4px 0 8px 0;">
-                            Time from bat contact until fielder picks up the ball.
+                            Estimated time from bat contact until fielder picks up the ball. Based on launch angle, hit distance, and fielder starting depth.
                         </div>
                         <div class="data-row">
                             <span class="data-label">Throw Time (est.)</span>
                             <span class="data-value">{{ play.throw_time }}s</span>
                         </div>
                         <div style="font-size: 0.7rem; color: var(--gray-500); margin: -4px 0 8px 0;">
-                            Time from fielding until throw reaches home plate.
+                            Estimated time from fielding until throw reaches home plate. Based on throw distance and fielder arm strength.
                         </div>
                         <div class="data-row">
                             <span class="data-label">Scoring Window (est.)</span>
                             <span class="data-value">{{ play.scoring_window }}s</span>
                         </div>
                         <div style="font-size: 0.7rem; color: var(--gray-500); margin-top: 4px;">
-                            Time gap between runner reaching home and throw arriving. Positive means runner beats the throw.
+                            Estimated time gap between runner and throw arriving at home. Based on runner speed minus total defense time. Positive means runner beats the throw.
                         </div>
                     </div>
 
