@@ -987,6 +987,10 @@ def plays():
                 sort_order = "asc"
         elif decision_type == "correct":
             plays_df = plays_df[plays_df["coach_decision_quality"].isin(["correct_send", "correct_hold"])]
+        elif decision_type == "correct_send":
+            plays_df = plays_df[plays_df["coach_decision_quality"] == "correct_send"]
+        elif decision_type == "correct_hold":
+            plays_df = plays_df[plays_df["coach_decision_quality"] == "correct_hold"]
 
     # Situation filter (Late & Close, High Leverage)
     if situation != "all" and len(plays_df) > 0:

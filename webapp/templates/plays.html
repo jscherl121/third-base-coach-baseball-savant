@@ -112,12 +112,14 @@
 
                     <div class="filter-group">
                         <label for="decision">Decision</label>
-                        <select name="decision" id="decision" class="form-control" style="width: 130px;" onchange="this.form.submit()">
+                        <select name="decision" id="decision" class="form-control" style="width: 160px;" onchange="this.form.submit()">
                             <option value="all" {{ 'selected' if current_decision == 'all' else '' }}>All</option>
-                            <option value="mistakes" {{ 'selected' if current_decision == 'mistakes' else '' }}>Mistakes</option>
-                            <option value="missed" {{ 'selected' if current_decision == 'missed' else '' }}>Missed Opportunities</option>
-                            <option value="bad_send" {{ 'selected' if current_decision == 'bad_send' else '' }}>Bad Sends</option>
-                            <option value="correct" {{ 'selected' if current_decision == 'correct' else '' }}>Correct</option>
+                            <option value="correct_send" {{ 'selected' if current_decision == 'correct_send' else '' }}>Correct Send</option>
+                            <option value="correct_hold" {{ 'selected' if current_decision == 'correct_hold' else '' }}>Correct Hold</option>
+                            <option value="missed" {{ 'selected' if current_decision == 'missed' else '' }}>Missed Opportunity</option>
+                            <option value="bad_send" {{ 'selected' if current_decision == 'bad_send' else '' }}>Suboptimal Send</option>
+                            <option value="correct" {{ 'selected' if current_decision == 'correct' else '' }}>All Correct Decisions</option>
+                            <option value="mistakes" {{ 'selected' if current_decision == 'mistakes' else '' }}>All Mistakes</option>
                         </select>
                     </div>
 
