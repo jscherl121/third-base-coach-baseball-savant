@@ -16,9 +16,9 @@
             <nav class="nav">
                 <a href="{{ url_for('index') }}" class="{{ 'active' if request.endpoint == 'index' else '' }}">Overview</a>
                 <a href="{{ url_for('methodology') }}" class="{{ 'active' if request.endpoint in ['methodology', 'calculations'] else '' }}">Methodology</a>
-                <a href="{{ url_for('ideal_state') }}" class="{{ 'active' if request.endpoint == 'ideal_state' else '' }}">Ideal State</a>
                 <a href="{{ url_for('leaderboards') }}" class="{{ 'active' if request.endpoint == 'leaderboards' else '' }}">Leaderboards</a>
                 <a href="{{ url_for('plays') }}" class="{{ 'active' if request.endpoint in ['plays', 'play_detail'] else '' }}">Plays</a>
+                <a href="{{ url_for('ideal_state') }}" class="{{ 'active' if request.endpoint == 'ideal_state' else '' }}">Ideal State</a>
             </nav>
         </div>
     </header>
