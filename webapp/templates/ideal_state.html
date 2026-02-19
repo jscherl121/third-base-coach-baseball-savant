@@ -5,124 +5,179 @@
 {% block head %}
 <style>
     .intro-text {
-        font-size: 1.05rem;
+        font-size: 0.9rem;
         color: var(--gray-700);
         line-height: 1.7;
-        max-width: 800px;
+        margin-bottom: var(--space-3);
+    }
+    .play-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
         margin-bottom: var(--space-6);
+        padding: 10px 16px;
+        background: var(--gray-100);
+        border: 1px solid var(--gray-300);
+        border-radius: 6px;
+        color: var(--primary);
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    .play-link:hover {
+        background: var(--gray-200);
     }
     .step-card {
         background: white;
         border: 1px solid var(--gray-200);
-        border-radius: 12px;
-        margin-bottom: var(--space-6);
+        border-radius: 8px;
+        margin-bottom: var(--space-5);
         overflow: hidden;
     }
     .step-header {
-        background: var(--gray-100);
-        padding: var(--space-3) var(--space-4);
+        background: var(--gray-50);
+        padding: 12px 16px;
         border-bottom: 1px solid var(--gray-200);
         display: flex;
         align-items: center;
-        gap: var(--space-3);
+        gap: 12px;
     }
     .step-number {
-        background: var(--primary);
+        background: var(--gray-700);
         color: white;
-        width: 32px;
-        height: 32px;
+        width: 24px;
+        height: 24px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-weight: 700;
-        font-size: 0.9rem;
+        font-weight: 600;
+        font-size: 0.75rem;
     }
     .step-title {
         font-weight: 600;
-        font-size: 1.1rem;
+        font-size: 0.9rem;
         color: var(--gray-800);
     }
-    .step-content {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0;
-    }
     .step-image {
-        padding: var(--space-4);
+        padding: 16px;
+        background: var(--gray-50);
         display: flex;
-        flex-direction: column;
-        align-items: center;
-        border-right: 1px solid var(--gray-200);
-    }
-    .step-image:last-child {
-        border-right: none;
+        justify-content: center;
+        border-bottom: 1px solid var(--gray-200);
     }
     .step-image img {
         width: 100%;
-        max-width: 500px;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        margin-bottom: var(--space-3);
+        max-width: 600px;
+        border-radius: 6px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
     }
     .comparison-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 0;
     }
     .comparison-col {
-        padding: var(--space-4);
+        padding: 16px;
     }
     .comparison-col:first-child {
         border-right: 1px solid var(--gray-200);
-        background: #fef3c7;
-    }
-    .comparison-col:last-child {
-        background: #d1fae5;
     }
     .comparison-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 12px;
+        color: var(--gray-800);
+    }
+    .metric-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 10px;
+        background: var(--gray-50);
+        border-radius: 4px;
+        margin-bottom: 6px;
+        font-size: 0.85rem;
+    }
+    .metric-label {
+        color: var(--gray-600);
+    }
+    .metric-value {
+        font-weight: 600;
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        color: var(--gray-800);
+    }
+    .metric-value.placeholder {
+        color: var(--gray-400);
+        font-style: italic;
+        font-family: inherit;
+    }
+    .metric-value.negative {
+        color: var(--danger);
+    }
+    .metric-value.positive {
+        color: var(--success);
+    }
+    .section-takeaway {
+        font-size: 0.85rem;
+        color: var(--gray-600);
+        margin-top: 12px;
+        padding: 10px 12px;
+        background: var(--gray-50);
+        border-left: 3px solid var(--gray-300);
+        border-radius: 0 4px 4px 0;
+    }
+    .section-takeaway strong {
+        color: var(--gray-700);
+    }
+    .recommendation-box {
+        padding: 12px 16px;
+        border-radius: 6px;
+        margin-top: 12px;
+    }
+    .recommendation-box.hold {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+    }
+    .recommendation-box.send {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+    }
+    .recommendation-label {
         font-size: 0.75rem;
         font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: var(--space-2);
+        letter-spacing: 0.04em;
+        margin-bottom: 4px;
     }
-    .comparison-col:first-child .comparison-label {
-        color: #92400e;
+    .recommendation-box.hold .recommendation-label {
+        color: #991b1b;
     }
-    .comparison-col:last-child .comparison-label {
-        color: #065f46;
+    .recommendation-box.send .recommendation-label {
+        color: #166534;
     }
-    .comparison-title {
+    .recommendation-value {
+        font-size: 0.9rem;
         font-weight: 600;
-        font-size: 0.95rem;
-        color: var(--gray-800);
-        margin-bottom: var(--space-2);
     }
-    .comparison-text {
+    .recommendation-box.hold .recommendation-value {
+        color: #dc2626;
+    }
+    .recommendation-box.send .recommendation-value {
+        color: #16a34a;
+    }
+    .outcome-note {
         font-size: 0.85rem;
         color: var(--gray-600);
-        line-height: 1.6;
-    }
-    .comparison-text ul {
-        margin: var(--space-2) 0 0 0;
-        padding-left: 1.25rem;
-    }
-    .comparison-text li {
-        margin-bottom: var(--space-1);
-    }
-    .highlight {
-        background: rgba(0,0,0,0.05);
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-family: var(--font-mono);
-        font-size: 0.8rem;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--gray-200);
     }
     @media (max-width: 768px) {
-        .step-content, .comparison-grid {
+        .comparison-grid {
             grid-template-columns: 1fr;
         }
-        .step-image, .comparison-col:first-child {
+        .comparison-col:first-child {
             border-right: none;
             border-bottom: 1px solid var(--gray-200);
         }
@@ -135,191 +190,252 @@
     <section class="section">
         <div class="page-header">
             <h1>Ideal State</h1>
-            <p>What the model could do with player tracking data</p>
+            <p>A comparison of the current model to one with player location tracking data</p>
         </div>
 
-        <div class="intro-text">
-            <p>
-                This model uses publicly available Statcast data from Baseball Savant. While Statcast captures detailed batted ball metrics (exit velocity, launch angle, landing location) and player attributes (sprint speed, arm strength), it does not include real-time player tracking positions during plays.
-            </p>
-            <p style="margin-top: var(--space-3);">
-                A stronger version of this model would use player tracking data to know exactly where the runner is at every moment. The following walkthrough compares what the current model estimates versus what would be possible with full tracking data.
-            </p>
-        </div>
+        <p class="intro-text">
+            This model uses publicly available Statcast data from Baseball Savant, which crucially does not include player location tracking. A stronger and more complete version of this project would use player tracking data to know exactly where the runner and fielders are at every moment.
+        </p>
 
-        <!-- Step 1: Moment of Contact -->
+        <p class="intro-text">
+            The following walkthrough compares what the model currently evaluates with what would be possible with full tracking data.
+        </p>
+
+        <a href="https://baseballsavant.mlb.com/sporty-videos?playId=c8b7fc42-fde2-3b49-991e-246fb19e8f84" target="_blank" class="play-link">
+            Watch this play on Baseball Savant
+        </a>
+
+        <!-- Step 1: Model Inputs -->
         <div class="step-card">
             <div class="step-header">
                 <div class="step-number">1</div>
-                <div class="step-title">Moment of Contact</div>
+                <div class="step-title">Model Inputs</div>
             </div>
-            <div class="step-image" style="border-right: none;">
+            <div class="step-image">
                 <img src="{{ url_for('static', filename='images/step1_contact.png') }}" alt="Moment of contact">
             </div>
             <div class="comparison-grid">
                 <div class="comparison-col">
                     <div class="comparison-label">Current Model</div>
-                    <div class="comparison-title">Uses Statcast batted ball data</div>
-                    <div class="comparison-text">
-                        <ul>
-                            <li>Exit velocity: <span class="highlight">93 mph</span></li>
-                            <li>Launch angle: <span class="highlight">10°</span></li>
-                            <li>Hit location: <span class="highlight">right field</span></li>
-                            <li>Runner on 2B with 0 outs</li>
-                        </ul>
-                        <p style="margin-top: var(--space-2);">Assumes runner starts at second base at the moment of contact. Runner behavior is estimated from game context (outs, score).</p>
+                    <div class="metric-row">
+                        <span class="metric-label">Exit velocity</span>
+                        <span class="metric-value">110.4 mph</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Launch angle</span>
+                        <span class="metric-value">-1°</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Hit location</span>
+                        <span class="metric-value">Left field</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Runner speed</span>
+                        <span class="metric-value">25.8 ft/s</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Fielder arm strength</span>
+                        <span class="metric-value">84.4 mph</span>
+                    </div>
+                    <div class="section-takeaway">
+                        <strong>Takeaway:</strong> Batted ball and player attribute data is available. Fielder starting position uses league average depth.
                     </div>
                 </div>
                 <div class="comparison-col">
                     <div class="comparison-label">With Player Tracking</div>
-                    <div class="comparison-title">Exact runner position known</div>
-                    <div class="comparison-text">
-                        <ul>
-                            <li>Runner's exact coordinates at contact</li>
-                            <li>Runner's lead distance from second base</li>
-                            <li>Runner's body orientation and momentum</li>
-                            <li>Whether runner is already in motion</li>
-                        </ul>
-                        <p style="margin-top: var(--space-2);">No estimation needed. The runner's starting position and state are directly observed.</p>
+                    <div class="metric-row">
+                        <span class="metric-label">Exit velocity</span>
+                        <span class="metric-value">110.4 mph</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Launch angle</span>
+                        <span class="metric-value">-1°</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Hit location</span>
+                        <span class="metric-value">Left field</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Runner speed</span>
+                        <span class="metric-value">25.8 ft/s</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Fielder arm strength</span>
+                        <span class="metric-value">84.4 mph</span>
+                    </div>
+                    <div class="section-takeaway">
+                        <strong>Takeaway:</strong> Same data plus exact runner lead distance and fielder starting coordinates at moment of contact.
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Step 2: Runner Avoids Ball -->
+        <!-- Step 2: Runner Reaction -->
         <div class="step-card">
             <div class="step-header">
                 <div class="step-number">2</div>
-                <div class="step-title">Runner Reacts to Ball</div>
+                <div class="step-title">Runner Reaction</div>
             </div>
-            <div class="step-image" style="border-right: none;">
-                <img src="{{ url_for('static', filename='images/step2_runner_avoids.png') }}" alt="Runner avoiding the ball">
+            <div class="step-image">
+                <img src="{{ url_for('static', filename='images/step2_runner_avoids.png') }}" alt="Runner reacting to ball">
             </div>
             <div class="comparison-grid">
                 <div class="comparison-col">
                     <div class="comparison-label">Current Model</div>
-                    <div class="comparison-title">Estimates runner behavior category</div>
-                    <div class="comparison-text">
-                        <ul>
-                            <li>Classifies as: <span class="highlight">on_contact</span>, <span class="highlight">hesitated</span>, or <span class="highlight">waited</span></li>
-                            <li>Uses game context (2 outs = run on contact)</li>
-                            <li>Applies average delay times per category</li>
-                        </ul>
-                        <p style="margin-top: var(--space-2);"><strong>Problem:</strong> The model has no way to know the runner dove to avoid a line drive. It cannot account for this delay in the runner's travel time.</p>
+                    <div class="metric-row">
+                        <span class="metric-label">Behavior category</span>
+                        <span class="metric-value">on_contact (estimated)</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Estimated delay</span>
+                        <span class="metric-value">0.3s</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Path to home</span>
+                        <span class="metric-value">180 ft (direct)</span>
+                    </div>
+                    <div class="section-takeaway">
+                        <strong>Takeaway:</strong> The model cannot detect that Juan Soto hesitated to avoid the line drive. This delay is not captured in any available data.
                     </div>
                 </div>
                 <div class="comparison-col">
                     <div class="comparison-label">With Player Tracking</div>
-                    <div class="comparison-title">Observes actual runner movement</div>
-                    <div class="comparison-text">
-                        <ul>
-                            <li>Runner's exact path and speed over time</li>
-                            <li>Detects the dive/hesitation directly</li>
-                            <li>Measures actual delay: <span class="highlight">+1.2s</span></li>
-                            <li>Knows runner position after recovery</li>
-                        </ul>
-                        <p style="margin-top: var(--space-2);">The dive to avoid the ball is directly observed, and the model can calculate exactly how much time was lost.</p>
+                    <div class="metric-row">
+                        <span class="metric-label">Observed action</span>
+                        <span class="metric-value placeholder">[hesitated/moved]</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Actual delay</span>
+                        <span class="metric-value placeholder">[measured]</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Current position</span>
+                        <span class="metric-value placeholder">[coordinates]</span>
+                    </div>
+                    <div class="section-takeaway">
+                        <strong>Takeaway:</strong> The hesitation is directly observed. We know exactly where Soto is and how much time was lost.
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Step 3: Fielder Picks Up Ball -->
+        <!-- Step 3: Timing Calculations -->
         <div class="step-card">
             <div class="step-header">
                 <div class="step-number">3</div>
-                <div class="step-title">Fielder Fields the Ball</div>
+                <div class="step-title">Timing Calculations</div>
             </div>
-            <div class="step-image" style="border-right: none;">
+            <div class="step-image">
                 <img src="{{ url_for('static', filename='images/step3_fielder_picks_up.png') }}" alt="Fielder picking up the ball">
             </div>
             <div class="comparison-grid">
                 <div class="comparison-col">
                     <div class="comparison-label">Current Model</div>
-                    <div class="comparison-title">Estimates fielder catch location</div>
-                    <div class="comparison-text">
-                        <ul>
-                            <li>Uses hit landing coordinates + fielder starting depth</li>
-                            <li>Estimates time to field from ball trajectory</li>
-                            <li>Calculates throw distance to home plate</li>
-                            <li>Uses average transfer time (catch to release)</li>
-                        </ul>
-                        <p style="margin-top: var(--space-2);"><strong>Problem:</strong> Runner position at this moment is estimated from contact time + assumed travel speed. The dive delay is not captured.</p>
+                    <div class="metric-row">
+                        <span class="metric-label">Time to field (est.)</span>
+                        <span class="metric-value">1.15s</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Throw distance (est.)</span>
+                        <span class="metric-value">159 ft</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Throw time (est.)</span>
+                        <span class="metric-value">2.39s</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Scoring window (est.)</span>
+                        <span class="metric-value positive">+2.64s</span>
+                    </div>
+                    <div class="section-takeaway">
+                        <strong>Takeaway:</strong> Positive scoring window means the runner is estimated to beat the throw by 2.64s. The timing favors the runner.
                     </div>
                 </div>
                 <div class="comparison-col">
                     <div class="comparison-label">With Player Tracking</div>
-                    <div class="comparison-title">Exact positions at field time</div>
-                    <div class="comparison-text">
-                        <ul>
-                            <li>Fielder's exact catch coordinates</li>
-                            <li>Runner's exact position (just past 2nd base after dive)</li>
-                            <li>Distance remaining to home: <span class="highlight">215 ft</span></li>
-                            <li>Runner's current speed and acceleration</li>
-                        </ul>
-                        <p style="margin-top: var(--space-2);">At this decision point, we know exactly how far the runner has to go and can calculate arrival time precisely.</p>
+                    <div class="metric-row">
+                        <span class="metric-label">Time to field</span>
+                        <span class="metric-value placeholder">[measured]</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Throw distance</span>
+                        <span class="metric-value placeholder">[measured]</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Throw time</span>
+                        <span class="metric-value placeholder">[measured]</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Scoring window</span>
+                        <span class="metric-value placeholder">[from actuals]</span>
+                    </div>
+                    <div class="section-takeaway">
+                        <strong>Takeaway:</strong> With true runner position after hesitation, scoring window would likely be positive, reflecting that Soto actually beat the throw.
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Step 4: Outcome -->
+        <!-- Step 4: Model Recommendation -->
         <div class="step-card">
             <div class="step-header">
                 <div class="step-number">4</div>
-                <div class="step-title">Outcome</div>
-            </div>
-            <div class="step-image" style="border-right: none;">
-                <img src="{{ url_for('static', filename='images/step4_runner_scores.png') }}" alt="Runner scores">
+                <div class="step-title">Model Recommendation</div>
             </div>
             <div class="comparison-grid">
                 <div class="comparison-col">
                     <div class="comparison-label">Current Model</div>
-                    <div class="comparison-title">May misclassify decision quality</div>
-                    <div class="comparison-text">
-                        <p>Because the model underestimated the runner's delay (the dive), it may have:</p>
-                        <ul>
-                            <li>Overestimated scoring probability</li>
-                            <li>Called this a "correct send" when it was actually risky</li>
-                            <li>Or called it a "missed opportunity" when holding was correct</li>
-                        </ul>
-                        <p style="margin-top: var(--space-2);">The model's recommendation accuracy suffers when runner behavior deviates from the estimated category.</p>
+                    <div class="metric-row">
+                        <span class="metric-label">Scoring probability</span>
+                        <span class="metric-value">98.6%</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">WP if send</span>
+                        <span class="metric-value">97.9%</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">WP if hold</span>
+                        <span class="metric-value">53.9%</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">WP delta</span>
+                        <span class="metric-value positive">+44.0%</span>
+                    </div>
+                    <div class="recommendation-box send">
+                        <div class="recommendation-label">Recommendation</div>
+                        <div class="recommendation-value">Send the runner</div>
+                    </div>
+                    <div class="outcome-note">
+                        <strong>Actual outcome:</strong> Coach sent runner. Juan Soto scored. Model correctly classifies this as a correct send.
                     </div>
                 </div>
                 <div class="comparison-col">
                     <div class="comparison-label">With Player Tracking</div>
-                    <div class="comparison-title">Accurate decision evaluation</div>
-                    <div class="comparison-text">
-                        <p>With full tracking data, the model would:</p>
-                        <ul>
-                            <li>Know the runner was 1.2s behind schedule</li>
-                            <li>Calculate true scoring probability given actual position</li>
-                            <li>Correctly evaluate whether the send was optimal</li>
-                            <li>Provide accurate WP impact of the decision</li>
-                        </ul>
-                        <p style="margin-top: var(--space-2);">The recommendation aligns with reality because all inputs are observed, not estimated.</p>
+                    <div class="metric-row">
+                        <span class="metric-label">Scoring probability</span>
+                        <span class="metric-value placeholder">[similar or adjusted]</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">WP if send</span>
+                        <span class="metric-value placeholder">[recalculated]</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">WP if hold</span>
+                        <span class="metric-value">53.9%</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">WP delta</span>
+                        <span class="metric-value placeholder">[more precise]</span>
+                    </div>
+                    <div class="recommendation-box send">
+                        <div class="recommendation-label">Recommendation</div>
+                        <div class="recommendation-value">Send the runner</div>
+                    </div>
+                    <div class="outcome-note">
+                        With player tracking, we would know Soto's exact position and delay after avoiding the ball, giving a more precise scoring probability rather than relying on category-based estimates.
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Summary -->
-        <div class="card" style="background: var(--gray-50);">
-            <div class="card-header">
-                <h3 class="card-title">Summary</h3>
-            </div>
-            <p style="color: var(--gray-700); line-height: 1.7;">
-                The current model provides valuable insights using publicly available data, but its accuracy is limited by the need to estimate runner positions and behavior. Key sources of estimation error include:
-            </p>
-            <ul style="color: var(--gray-700); margin: var(--space-3) 0; padding-left: 1.5rem; line-height: 1.8;">
-                <li><strong>Runner reaction time:</strong> Classified into categories rather than directly measured</li>
-                <li><strong>Runner path:</strong> Assumed to be direct; detours (like avoiding a batted ball) are not captured</li>
-                <li><strong>Fielder positioning:</strong> Uses average starting depth rather than actual position</li>
-                <li><strong>Decision timing:</strong> The coach's view and the runner's position at decision time are unknown</li>
-            </ul>
-            <p style="color: var(--gray-700); line-height: 1.7;">
-                With player tracking data, all of these would be directly observed, enabling a model that could evaluate third base coaching decisions with much higher precision.
-            </p>
         </div>
     </section>
 </div>

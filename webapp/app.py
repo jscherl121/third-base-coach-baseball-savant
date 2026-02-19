@@ -854,9 +854,13 @@ def team_detail(team_code):
     mistake_cost = mistake_plays["WP_delta"].abs().sum() * 10 if len(mistake_plays) > 0 else 0
     net_runs = correct_value - mistake_cost
 
+    # Get coach name
+    coach_name = THIRD_BASE_COACHES.get(team_code, "Unknown")
+
     team = {
         "name": team_code,
         "full_name": team_names.get(team_code, team_code),
+        "coach_name": coach_name,
         "total_plays": int(team_row.get("total_plays", 0)),
         "plays_sent": int(team_row.get("plays_sent", 0)),
         "plays_held": int(team_row.get("plays_held", 0)),
@@ -886,6 +890,54 @@ def team_detail(team_code):
         team["worst_holds"][i]["id"] = idx
     for i, (idx, _) in enumerate(worst_sends.iterrows()):
         team["worst_sends"][i]["id"] = idx
+
+    # Generate scouting report
+    missed = len(missed_opps)
+    bad_sends = len(bad_sends_plays)
+    total_mistakes = missed + bad_sends
+    pct = pct_correct_reclassified * 100
+
+    # Use team code hash for deterministic variety
+    variety_seed = sum(ord(c) for c in team_code) % 3
+
+    # Build scouting report based on performance tier and mistake profile
+    if net_runs > 40:
+        if variety_seed == 0:
+            report = f"Elite decision-maker who ranks among the league's best, converting {pct:.0f}% of situations correctly."
+        elif variety_seed == 1:
+            report = f"Exceptional read on send/hold situations with a {pct:.0f}% success rate and minimal costly errors."
+        else:
+            report = f"Top-tier performer whose aggressive-yet-calculated approach maximizes run production."
+    elif net_runs > 20:
+        if missed > bad_sends * 1.5:
+            report = f"Strong overall numbers but leaves some runs on the table—{missed} missed opportunities suggest room to be more aggressive."
+        elif bad_sends > missed * 1.5:
+            report = f"Solid performer who occasionally pushes the envelope too far, resulting in {bad_sends} suboptimal sends."
+        else:
+            report = f"Reliable decision-maker with a {pct:.0f}% accuracy rate and well-balanced risk management."
+    elif net_runs > 0:
+        if missed > bad_sends * 1.5:
+            report = f"Conservative approach limits mistakes but also limits upside—{missed} missed opportunities outpace {bad_sends} bad sends."
+        elif bad_sends > missed * 1.5:
+            report = f"Aggressive tendencies create value but also risk—{bad_sends} questionable sends offset by willingness to push runners."
+        else:
+            report = f"Middle-of-the-pack performer with {total_mistakes} total mistakes split fairly evenly between caution and aggression."
+    elif net_runs > -20:
+        if missed > bad_sends * 1.5:
+            report = f"Overly cautious approach is costing runs—{missed} missed opportunities indicate reluctance to send in scoreable situations."
+        elif bad_sends > missed * 1.5:
+            report = f"Aggression without precision—{bad_sends} ill-timed sends have hurt the club more than the {missed} missed chances."
+        else:
+            report = f"Below-average results with mistakes on both ends: {missed} missed opportunities and {bad_sends} bad sends."
+    else:
+        if missed > bad_sends * 1.5:
+            report = f"Among the league's most conservative coaches, with {missed} missed opportunities suggesting a fundamental misread of scoring chances."
+        elif bad_sends > missed * 1.5:
+            report = f"High-risk approach has backfired—{bad_sends} bad sends place him among the league's costliest decision-makers."
+        else:
+            report = f"Struggles at both ends with {missed} missed opportunities and {bad_sends} bad sends, ranking near the bottom leaguewide."
+
+    team["scouting_report"] = report
 
     # League averages for comparison (calculate from reclassified plays data for consistency)
     league_avg = {}

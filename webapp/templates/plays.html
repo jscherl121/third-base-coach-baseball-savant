@@ -85,14 +85,9 @@
 {% block content %}
 <div class="container">
     <section class="section">
-        <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <div>
-                <h1>Play Explorer</h1>
-                <p>Browse individual plays with model analysis and video links.</p>
-            </div>
-            <div style="color: var(--gray-600); font-size: 0.9rem;">
-                {{ plays|length }} of {{ "{:,}".format(total_plays) }} plays
-            </div>
+        <div class="page-header">
+            <h1>Play Explorer</h1>
+            <p>Browse individual plays with model analysis and video links.</p>
         </div>
 
         <!-- Filters -->
@@ -160,7 +155,7 @@
                     </div>
                 </div>
 
-                <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
+                <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;">
                     <div class="filter-group">
                         <label for="batter">Batter</label>
                         <input type="text" list="batter-list" name="batter" id="batter" class="form-control"
@@ -198,6 +193,10 @@
                             <option value="{{ f }}">{{ f }}</option>
                             {% endfor %}
                         </datalist>
+                    </div>
+
+                    <div style="margin-left: auto; padding-bottom: 0.35rem;">
+                        <span style="color: var(--gray-600); font-size: 0.85rem;">{{ plays|length }} of {{ "{:,}".format(total_plays) }} plays</span>
                     </div>
                 </div>
 
