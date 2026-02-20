@@ -3,6 +3,8 @@ Third Base Send Model - Web Application
 
 A professional dashboard for analyzing third base coach decisions
 using Win Probability analysis.
+
+Updated: Feb 2026
 """
 
 import os
