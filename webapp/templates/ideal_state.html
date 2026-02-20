@@ -256,15 +256,15 @@
                 </table>
             </div>
             <div class="section-takeaway-full">
-                <strong>Takeaway:</strong> The model does not know the runner's lead distance or reaction time to the hit. Additionally, it assumes the runner hesitated for 0.8 seconds because it was a line drive with fewer than two outs.
+                <strong>Takeaway:</strong> With player tracking data the runner's lead distance, reaction time, and potential delay is directly measured, rather than estimated.
             </div>
         </div>
 
-        <!-- Step 3: Timing and Location Calculations -->
+        <!-- Step 3: Fielder Data -->
         <div class="step-card">
             <div class="step-header">
                 <div class="step-number">3</div>
-                <div class="step-title">Timing and Location Calculations</div>
+                <div class="step-title">Fielder Data</div>
             </div>
             <div class="step-image">
                 <img src="{{ url_for('static', filename='images/twins_3.png') }}" alt="Fielder picking up the ball">
@@ -308,7 +308,7 @@
                 </table>
             </div>
             <div class="section-takeaway-full">
-                <strong>Takeaway:</strong> With behavior and movement patterns estimated for the players, the model believes Bader will beat the throw by 0.71 seconds, giving him an 86% chance to score.
+                <strong>Takeaway:</strong> Knowing that Bader had already rounded third base at the moment the left fielder played the ball, the player tracking model would have provided a significantly higher likelihood to score.
             </div>
         </div>
 
@@ -336,7 +336,7 @@
                         <tr>
                             <td>WP if Send</td>
                             <td>61.7%</td>
-                            <td>Recalculated</td>
+                            <td>Higher than estimated</td>
                         </tr>
                         <tr>
                             <td>WP if Hold</td>
@@ -345,19 +345,19 @@
                         </tr>
                         <tr>
                             <td>WP Delta</td>
-                            <td class="negative">-37.1%</td>
-                            <td>Closer to zero or positive</td>
+                            <td class="negative">-1.2%</td>
+                            <td>Likely positive</td>
                         </tr>
                         <tr>
                             <td>Recommendation</td>
                             <td style="color: #dc2626; font-weight: 700;">Hold the runner</td>
-                            <td style="color: #16a34a; font-weight: 700;">Send the runner</td>
+                            <td style="color: #16a34a; font-weight: 700;">Likely send the runner</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
             <div class="section-takeaway-full">
-                <strong>Actual outcome:</strong> Coach sent runner. Harrison Bader scored. The current model classifies this as a suboptimal send due to the risk involved, but with player tracking showing Bader's advanced position, the model would likely recommend sending—aligning with the successful outcome.
+                <strong>Takeaway:</strong> The current model classifies this play as a suboptimal send. With player tracking data this model would most likely recommend the coach to send the runner, aligning with his decision.
             </div>
         </div>
     </section>

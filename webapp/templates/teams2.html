@@ -165,6 +165,7 @@
         <!-- Metric Toggle Buttons -->
         <div class="metric-toggle">
             <button class="metric-btn active" data-metric="net_runs">Net Runs</button>
+            <button class="metric-btn" data-metric="net_runs_plus">Net Runs+</button>
             <div class="metric-group">
                 <button class="metric-btn" data-metric="mistakes">Total Mistakes</button>
                 <div class="metric-sub" id="mistakes-sub" style="display: none;">
@@ -179,7 +180,7 @@
         </div>
 
         <p class="metric-description" id="metric-desc">
-            Net coaching value: runs gained from correct decisions minus runs lost from mistakes.
+            Net runs: runs gained from correct decisions minus runs lost from mistakes.
         </p>
 
         <!-- Chart -->
@@ -189,6 +190,7 @@
                 <div class="bar-row" data-team="{{ team.name }}"
                      data-coach="{{ team.coach_name }}"
                      data-net-runs="{{ team.net_runs_raw }}"
+                     data-net-runs-plus="{{ team.net_runs_plus }}"
                      data-mistakes="{{ team.total_mistakes }}"
                      data-missed="{{ team.missed_opportunities }}"
                      data-bad-sends="{{ team.bad_sends }}"
@@ -224,7 +226,8 @@
 {% block scripts %}
 <script>
 const metricDescriptions = {
-    net_runs: "Net coaching value: runs gained from correct decisions minus runs lost from mistakes.",
+    net_runs: "Net runs: runs gained from correct decisions minus runs lost from mistakes.",
+    net_runs_plus: "Net runs+: runs gained from correct decisions minus runs lost from mistakes, normalized to 100 as average.",
     mistakes: "Total coaching errors: missed opportunities plus bad sends. Lower is better.",
     missed: "Plays where the coach held but the model recommended sending. Lower is better.",
     bad_sends: "Plays where the coach sent but the model recommended holding. Lower is better.",
@@ -235,6 +238,7 @@ const metricDescriptions = {
 
 const metricConfig = {
     net_runs: { format: v => (v >= 0 ? '+' : '') + v.toFixed(1), higherIsBetter: true },
+    net_runs_plus: { format: v => v.toFixed(0), higherIsBetter: true },
     mistakes: { format: v => v.toString(), higherIsBetter: false },
     missed: { format: v => v.toString(), higherIsBetter: false },
     bad_sends: { format: v => v.toString(), higherIsBetter: false },
@@ -292,6 +296,7 @@ function updateChart(metric, reversed = false) {
         let val;
         switch(metric) {
             case 'net_runs': val = parseFloat(row.dataset.netRuns); break;
+            case 'net_runs_plus': val = parseFloat(row.dataset.netRunsPlus); break;
             case 'mistakes': val = parseInt(row.dataset.mistakes); break;
             case 'missed': val = parseInt(row.dataset.missed); break;
             case 'bad_sends': val = parseInt(row.dataset.badSends); break;

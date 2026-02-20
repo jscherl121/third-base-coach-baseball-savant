@@ -792,6 +792,15 @@ def leaderboards():
         }
         teams_list.append(team)
 
+    # Calculate Net Runs+ (normalized to 100 as average)
+    if len(teams_list) > 0:
+        avg_net_runs = sum(t["net_runs_raw"] for t in teams_list) / len(teams_list)
+        for team in teams_list:
+            team["net_runs_plus"] = 100 + (team["net_runs_raw"] - avg_net_runs)
+    else:
+        for team in teams_list:
+            team["net_runs_plus"] = 100
+
     # Sort by net runs (descending) by default
     teams_list.sort(key=lambda x: x["net_runs_raw"], reverse=True)
 
