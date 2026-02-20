@@ -10,6 +10,19 @@
             <p>This page documents how each factor in the model is calculated, from raw Statcast data to the final send/hold recommendation.</p>
         </div>
 
+        <!-- Scoring Probability -->
+        <div class="callout callout-info" style="margin-bottom: var(--space-5);">
+            <h3>Scoring Probability</h3>
+            <p><strong>What it is:</strong> The probability that the runner scores if sent home. This is the most important input to the send/hold decision.</p>
+            <p><strong>How it's calculated:</strong> We use a physics-based approach that compares the time it takes for the runner to travel from second base to home plate against the time it takes for the defense to field the ball and throw it home.</p>
+            <ul>
+                <li><strong>Runner time:</strong> Distance from 2B to home (180 ft) ÷ runner sprint speed, plus any delay for line drives or fly balls</li>
+                <li><strong>Defense time:</strong> Time to field the ball + transfer time + throw flight time to home</li>
+                <li><strong>Scoring window:</strong> Defense time minus runner time. Positive means the runner beats the throw.</li>
+            </ul>
+            <p>The scoring window is converted to a probability: large positive windows (runner beats throw easily) yield ~100% probability, while negative windows (throw beats runner) yield lower probabilities. The model is calibrated against actual outcomes.</p>
+        </div>
+
         <!-- Fielder Positioning -->
         <div class="callout" style="margin-bottom: var(--space-5);">
             <h3>Fielder Starting Position</h3>
@@ -142,26 +155,6 @@
             <p><strong>Important:</strong> Even with negative scoring windows, runners score 97% of the time in actual data, suggesting the physics model is conservative or doesn't capture all factors (transfer errors, throw accuracy, etc.).</p>
         </div>
 
-        <!-- Scoring Probability -->
-        <div class="callout" style="margin-bottom: var(--space-5);">
-            <h3>Scoring Probability</h3>
-            <p><strong>What it is:</strong> The probability that the runner scores if sent.</p>
-            <p><strong>Why we blend two approaches:</strong> The raw ML model is trained only on plays where coaches sent runners—these are pre-selected to be high-probability situations. This creates selection bias: the model sees 97% success and learns to predict high probabilities for everything. For borderline plays, we need to trust physics more.</p>
-            <p><strong>How it's calculated:</strong> A blend of two estimates:</p>
-            <ul>
-                <li><strong>ML estimate:</strong> Logistic regression trained on actual outcomes, using 22 features (batted ball data, runner speed, fielder arm, etc.)</li>
-                <li><strong>Physics estimate:</strong> Based purely on scoring window timing—if throw beats runner by 1 second, probability should be low regardless of what ML says</li>
-            </ul>
-            <p><strong>Blending logic:</strong></p>
-            <ul>
-                <li>Scoring window ≥ 2s (easy score): 100% ML estimate</li>
-                <li>Scoring window 1-2s: 80% ML, 20% physics</li>
-                <li>Scoring window 0.5-1s: 60% ML, 40% physics</li>
-                <li>Scoring window 0-0.5s: 40% ML, 60% physics</li>
-                <li>Scoring window &lt; 0 (throw beats runner): Mostly physics</li>
-            </ul>
-            <p>This gives realistic probabilities: 24% for a play where the throw beats the runner by 1 second, up to 100% for easy scores.</p>
-        </div>
 
         <!-- Win Probability -->
         <div class="callout callout-info" style="margin-bottom: var(--space-5);">
