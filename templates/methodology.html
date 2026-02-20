@@ -335,6 +335,19 @@
 
         <!-- CALCULATIONS TAB -->
         <div id="calculations" class="tab-content">
+            <!-- Scoring Probability -->
+            <div class="callout callout-info" style="margin-bottom: var(--space-5);">
+                <h3>Scoring Probability</h3>
+                <p><strong>What it is:</strong> The probability that the runner scores if sent home. This is the most important input to the send/hold decision.</p>
+                <p><strong>How it's calculated:</strong> We use a physics-based approach that compares the time it takes for the runner to travel from second base to home plate against the time it takes for the defense to field the ball and throw it home.</p>
+                <ul>
+                    <li><strong>Runner time:</strong> Distance from 2B to home (180 ft) ÷ runner sprint speed, plus any delay for line drives or fly balls</li>
+                    <li><strong>Defense time:</strong> Time to field the ball + transfer time + throw flight time to home</li>
+                    <li><strong>Scoring window:</strong> Defense time minus runner time. Positive means the runner beats the throw.</li>
+                </ul>
+                <p>The scoring window is converted to a probability: large positive windows (runner beats throw easily) yield ~100% probability, while negative windows (throw beats runner) yield lower probabilities.</p>
+            </div>
+
             <!-- Fielder Positioning -->
             <div class="callout" style="margin-bottom: var(--space-5);">
                 <h3>Fielder Starting Position</h3>
@@ -380,18 +393,6 @@
                 <p style="margin-top: var(--space-3);"><strong>Positive</strong> = runner beats throw. <strong>Negative</strong> = throw beats runner.</p>
             </div>
 
-            <!-- Scoring Probability Blending -->
-            <div class="callout" style="margin-bottom: var(--space-5);">
-                <h3>Scoring Probability Blending</h3>
-                <p><strong>Why we blend:</strong> The ML model is trained on plays where coaches sent runners—pre-selected to be high-probability. For borderline plays, we trust physics more.</p>
-                <p><strong>Blending logic:</strong></p>
-                <ul>
-                    <li>Scoring window ≥ 2s: 100% ML estimate (easy score)</li>
-                    <li>Scoring window 1-2s: 80% ML, 20% physics</li>
-                    <li>Scoring window 0-1s: 40-60% ML, 40-60% physics</li>
-                    <li>Scoring window < 0: Mostly physics (throw beats runner)</li>
-                </ul>
-            </div>
 
             <!-- Win Probability -->
             <div class="callout callout-info" style="margin-bottom: var(--space-5);">
