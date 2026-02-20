@@ -204,16 +204,21 @@
         </div>
 
         <p class="intro-text">
-            This model uses publicly available Statcast data from Baseball Savant, which crucially does not include player location tracking. A stronger and more complete version of this project would use player tracking data to know exactly where the runner and fielders are at every moment.
+            This model uses publicly available Statcast data from Baseball Savant, which critically does not include player location tracking. An enhanced and more complete version of this project uses player tracking data to know exactly where the runner and fielders are at every moment.
         </p>
 
         <p class="intro-text">
-            The following walkthrough compares what the model currently evaluates with what would be possible with full tracking data.
+            The following walkthrough compares what the model currently evaluates and estimates with what would be possible with full tracking data.
         </p>
 
-        <a href="https://baseballsavant.mlb.com/sporty-videos?playId=c49c7570-b4d4-3b22-9ee9-fdf35e8441d8" target="_blank" class="play-link">
-            Watch this play on Baseball Savant
-        </a>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: var(--space-6);">
+            <a href="https://baseballsavant.mlb.com/sporty-videos?playId=c49c7570-b4d4-3b22-9ee9-fdf35e8441d8" target="_blank" class="play-link" style="margin-bottom: 0;">
+                Watch this play on Baseball Savant
+            </a>
+            <a href="{{ url_for('play_detail', play_id=5000) }}" class="play-link" style="margin-bottom: 0;">
+                View the decision analysis for this play
+            </a>
+        </div>
 
         <!-- Step 1: Batted Ball Data -->
         <div class="step-card">
@@ -269,11 +274,11 @@
             </div>
         </div>
 
-        <!-- Step 2: Runner Reaction -->
+        <!-- Step 2: Runner Data -->
         <div class="step-card">
             <div class="step-header">
                 <div class="step-number">2</div>
-                <div class="step-title">Runner Reaction</div>
+                <div class="step-title">Runner Data</div>
             </div>
             <div class="step-image">
                 <img src="{{ url_for('static', filename='images/twins_2.png') }}" alt="Runner reacting to ball">
@@ -283,11 +288,11 @@
                     <div class="comparison-label">Current Model</div>
                     <div class="metric-row">
                         <span class="metric-label">Estimated runner behavior</span>
-                        <span class="metric-value">on contact</span>
+                        <span class="metric-value">On Contact</span>
                     </div>
                     <div class="metric-row">
-                        <span class="metric-label">Estimated delay</span>
-                        <span class="metric-value">0.8s</span>
+                        <span class="metric-label">Runner reaction timing</span>
+                        <span class="metric-value">0.8s delay</span>
                     </div>
                     <div class="metric-row">
                         <span class="metric-label">Runner lead distance</span>
@@ -301,15 +306,15 @@
                     <div class="comparison-label">With Player Tracking</div>
                     <div class="metric-row">
                         <span class="metric-label">Estimated runner behavior</span>
-                        <span class="metric-value placeholder">[observed]</span>
+                        <span class="metric-value">Observed</span>
                     </div>
                     <div class="metric-row">
-                        <span class="metric-label">Actual delay</span>
-                        <span class="metric-value placeholder">[measured]</span>
+                        <span class="metric-label">Runner reaction timing</span>
+                        <span class="metric-value">Measured</span>
                     </div>
                     <div class="metric-row">
                         <span class="metric-label">Runner lead distance</span>
-                        <span class="metric-value placeholder">[measured]</span>
+                        <span class="metric-value">Measured</span>
                     </div>
                     <div class="section-takeaway">
                         <strong>Takeaway:</strong> The runner's lead distance, reaction time, and potential delay is directly measured.
@@ -358,23 +363,23 @@
                     <div class="comparison-label">With Player Tracking</div>
                     <div class="metric-row">
                         <span class="metric-label">Fielder starting location</span>
-                        <span class="metric-value placeholder">[measured]</span>
+                        <span class="metric-value">Measured</span>
                     </div>
                     <div class="metric-row">
                         <span class="metric-label">Time to field</span>
-                        <span class="metric-value placeholder">[measured]</span>
+                        <span class="metric-value">Measured</span>
                     </div>
                     <div class="metric-row">
                         <span class="metric-label">Throw distance</span>
-                        <span class="metric-value placeholder">[measured]</span>
+                        <span class="metric-value">Measured</span>
                     </div>
                     <div class="metric-row" style="margin-left: 16px;">
                         <span class="metric-label">Throw time</span>
-                        <span class="metric-value placeholder">Est. from accurate throw dist.</span>
+                        <span class="metric-value">Estimated from accurate throw distance</span>
                     </div>
                     <div class="metric-row">
                         <span class="metric-label">Scoring window</span>
-                        <span class="metric-value placeholder">Est. from accurate throw dist.</span>
+                        <span class="metric-value">Estimated from accurate throw distance</span>
                     </div>
                     <div class="section-takeaway">
                         <strong>Takeaway:</strong> Knowing that Bader had already rounded third base at the moment the left fielder played the ball, the model would have provided a significantly higher likelihood to score.
@@ -420,11 +425,11 @@
                     <div class="comparison-label">With Player Tracking</div>
                     <div class="metric-row">
                         <span class="metric-label">Scoring probability</span>
-                        <span class="metric-value placeholder">[higher than estimated]</span>
+                        <span class="metric-value">Higher than estimated</span>
                     </div>
                     <div class="metric-row">
                         <span class="metric-label">WP if send</span>
-                        <span class="metric-value placeholder">[recalculated]</span>
+                        <span class="metric-value">Recalculated</span>
                     </div>
                     <div class="metric-row">
                         <span class="metric-label">WP if hold</span>
@@ -432,7 +437,7 @@
                     </div>
                     <div class="metric-row">
                         <span class="metric-label">WP delta</span>
-                        <span class="metric-value placeholder">[closer to zero or positive]</span>
+                        <span class="metric-value">Closer to zero or positive</span>
                     </div>
                     <div class="recommendation-box send">
                         <div class="recommendation-label">Likely Recommendation</div>
