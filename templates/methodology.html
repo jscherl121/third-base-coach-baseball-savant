@@ -348,10 +348,15 @@
                 <p>The scoring window is converted to a probability: large positive windows (runner beats throw easily) yield ~100% probability, while negative windows (throw beats runner) yield lower probabilities.</p>
             </div>
 
+            <!-- Scoring Probability Inputs Section -->
+            <h3 style="margin-bottom: var(--space-3); color: var(--gray-700);">Scoring Probability Inputs</h3>
+            <p style="margin-bottom: var(--space-4); color: var(--gray-600); font-size: 0.9rem;">The following factors are used to calculate the scoring probability for each play.</p>
+
             <!-- Fielder Positioning -->
             <div class="callout" style="margin-bottom: var(--space-5);">
                 <h3>Fielder Starting Position</h3>
                 <p><strong>What it is:</strong> Where the outfielder was standing when the ball was hit.</p>
+                <p><strong>Why it's included:</strong> Determines how far the fielder must travel to reach the ball, directly affecting the time required to field and throw.</p>
                 <p><strong>Source:</strong> <a href="https://baseballsavant.mlb.com/visuals/fielder-positioning-all" target="_blank">Baseball Savant Fielder Positioning</a> data.</p>
                 <ul>
                     <li><strong>Player-specific positions:</strong> Actual average starting depth and angle for each outfielder</li>
@@ -363,21 +368,52 @@
             <div class="callout" style="margin-bottom: var(--space-5);">
                 <h3>Time to Field</h3>
                 <p><strong>What it is:</strong> Time from bat contact until the fielder picks up the ball.</p>
-                <p><strong>How it's calculated:</strong> Two components are combined:</p>
+                <p><strong>Why it's included:</strong> Establishes when the defensive sequence begins—the longer it takes to field, the more time the runner has to advance.</p>
+                <p><strong>How it's calculated:</strong></p>
                 <ul>
                     <li><strong>Ball trajectory:</strong> Based on launch angle—ground balls land quickly then roll, line drives travel fast horizontally, fly balls follow projectile motion physics.</li>
-                    <li><strong>Fielder movement:</strong> Starting from the outfielder's average positioning depth, we calculate where they can run during the ball's flight time (accounting for reaction time and sprint speed) to determine the intercept point.</li>
+                    <li><strong>Fielder movement:</strong> Starting from the outfielder's positioning depth, we calculate where they intercept the ball based on reaction time and sprint speed.</li>
                 </ul>
+            </div>
+
+            <!-- Throw Distance -->
+            <div class="callout" style="margin-bottom: var(--space-5);">
+                <h3>Throw Distance</h3>
+                <p><strong>What it is:</strong> The distance from where the fielder picks up the ball to home plate.</p>
+                <p><strong>Why it's included:</strong> Longer throws take more time and are more difficult to execute accurately, giving the runner a better chance to score.</p>
+                <p><strong>How it's calculated:</strong> Euclidean distance from the fielding location to home plate, derived from the fielder's intercept point.</p>
             </div>
 
             <!-- Throw Time -->
             <div class="callout" style="margin-bottom: var(--space-5);">
                 <h3>Throw Time</h3>
                 <p><strong>What it is:</strong> Time from fielding the ball until the throw reaches home.</p>
+                <p><strong>Why it's included:</strong> Combines the fielder's transfer mechanics with arm strength to determine how quickly the ball reaches the catcher.</p>
                 <p><strong>Components:</strong></p>
                 <ul>
-                    <li><strong>Transfer time</strong> (catch to release): 1.1-1.4s depending on catch type. Running catches are faster (momentum toward home).</li>
-                    <li><strong>Flight time</strong>: throw_distance ÷ arm_strength × 1.2 (arc factor)</li>
+                    <li><strong>Transfer time</strong> (catch to release): 1.1-1.4s depending on catch difficulty</li>
+                    <li><strong>Flight time:</strong> throw_distance ÷ arm_strength × arc factor</li>
+                </ul>
+            </div>
+
+            <!-- Runner Speed -->
+            <div class="callout" style="margin-bottom: var(--space-5);">
+                <h3>Runner Speed</h3>
+                <p><strong>What it is:</strong> The runner's sprint speed in feet per second.</p>
+                <p><strong>Why it's included:</strong> Faster runners cover the 180 feet from second to home more quickly, increasing their probability of beating the throw.</p>
+                <p><strong>Source:</strong> Statcast sprint speed leaderboards, measured as the runner's peak speed.</p>
+            </div>
+
+            <!-- Runner Delay -->
+            <div class="callout" style="margin-bottom: var(--space-5);">
+                <h3>Runner Delay</h3>
+                <p><strong>What it is:</strong> How long the runner waits before committing to run.</p>
+                <p><strong>Why it's included:</strong> Runners hesitate on line drives and fly balls to avoid being doubled off if the ball is caught—this delay reduces their effective travel time.</p>
+                <p><strong>Estimated by batted ball type:</strong></p>
+                <ul>
+                    <li>Ground balls: ~0.3s (go on contact)</li>
+                    <li>Line drives: ~0.8s (hesitate to read trajectory)</li>
+                    <li>Fly balls: ~1.5s or tag up</li>
                 </ul>
             </div>
 
@@ -385,42 +421,44 @@
             <div class="callout" style="margin-bottom: var(--space-5);">
                 <h3>Scoring Window</h3>
                 <p><strong>What it is:</strong> Time margin between runner arrival and throw arrival at home.</p>
+                <p><strong>Why it's included:</strong> This is the core comparison that determines whether the runner beats the throw—positive windows favor the runner, negative windows favor the defense.</p>
                 <div class="formula-block">
-                    <div>Defense time = hang_time + throw_time + catcher_tag (1.0s)</div>
+                    <div>Defense time = time_to_field + throw_time + catcher_tag (1.0s)</div>
                     <div>Runner time = 180 ft ÷ runner_speed + runner_delay</div>
                     <div><strong>Scoring window = Defense time - Runner time</strong></div>
                 </div>
-                <p style="margin-top: var(--space-3);"><strong>Positive</strong> = runner beats throw. <strong>Negative</strong> = throw beats runner.</p>
             </div>
 
+            <!-- Win Probability Section -->
+            <h3 style="margin-top: var(--space-6); margin-bottom: var(--space-3); color: var(--gray-700);">Win Probability & Decision Value</h3>
+            <p style="margin-bottom: var(--space-4); color: var(--gray-600); font-size: 0.9rem;">These metrics determine whether sending the runner is the optimal decision.</p>
 
             <!-- Win Probability -->
             <div class="callout callout-info" style="margin-bottom: var(--space-5);">
                 <h3>Win Probability Values</h3>
+                <p><strong>What it is:</strong> The team's probability of winning the game in each scenario.</p>
+                <p><strong>Why it's included:</strong> Context matters—a run in the 9th inning of a tie game is worth more than a run in a blowout. Win probability captures this.</p>
                 <p><strong>Source:</strong> Historical MLB data for each base-out-inning-score state.</p>
                 <ul>
                     <li><strong>WP if Send:</strong> P(score) × WP(run scores) + (1-P(score)) × WP(out at home)</li>
                     <li><strong>WP if Hold:</strong> WP with runner on 3rd, batter on 1st</li>
-                    <li><strong>Extra innings:</strong> Accounts for ghost runner rule (runner on 2B to start each half-inning)</li>
                 </ul>
             </div>
 
             <!-- Net Runs -->
             <div class="callout" style="margin-bottom: var(--space-5);">
-                <h3>Net Runs Calculation</h3>
+                <h3>Net Runs</h3>
                 <p><strong>What it is:</strong> Total run value gained or lost from decisions.</p>
-                <p><strong>Formula:</strong> <code>Net Runs = WP_delta × 10</code></p>
-                <p>The factor of 10 converts Win Probability to runs (historically, 1 win ≈ 10 runs).</p>
-                <ul>
-                    <li>Correct decision: positive contribution</li>
-                    <li>Wrong decision: negative contribution (runs left on table)</li>
-                </ul>
+                <p><strong>Why it's included:</strong> Translates win probability differences into a tangible runs metric for comparing coach performance.</p>
+                <p><strong>Formula:</strong> <code>Net Runs = WP_delta × 10</code> (1 win ≈ 10 runs historically)</p>
             </div>
 
             <!-- Data Sources -->
+            <h3 style="margin-top: var(--space-6); margin-bottom: var(--space-3); color: var(--gray-700);">Data Sources</h3>
+
             <div class="callout" style="background: var(--gray-100);">
-                <h3>Data Sources (Not Estimated)</h3>
-                <p>These come directly from Statcast:</p>
+                <h3>Statcast Data (Not Estimated)</h3>
+                <p>These values come directly from MLB's tracking system:</p>
                 <div class="grid-2" style="gap: var(--space-3);">
                     <ul style="margin: 0;">
                         <li>Exit velocity (mph)</li>
