@@ -318,11 +318,11 @@
             </div>
         </div>
 
-        <!-- Step 3: Timing Calculations -->
+        <!-- Step 3: Timing and Location Calculations -->
         <div class="step-card">
             <div class="step-header">
                 <div class="step-number">3</div>
-                <div class="step-title">Timing Calculations</div>
+                <div class="step-title">Timing and Location Calculations</div>
             </div>
             <div class="step-image">
                 <img src="{{ url_for('static', filename='images/twins_3.png') }}" alt="Fielder picking up the ball">
@@ -331,27 +331,35 @@
                 <div class="comparison-col">
                     <div class="comparison-label">Current Model</div>
                     <div class="metric-row">
+                        <span class="metric-label">Fielder starting location (est.)</span>
+                        <span class="metric-value">297 ft (player season avg)</span>
+                    </div>
+                    <div class="metric-row">
                         <span class="metric-label">Time to field (est.)</span>
-                        <span class="metric-value">1.15s</span>
+                        <span class="metric-value">1.88s</span>
                     </div>
                     <div class="metric-row">
                         <span class="metric-label">Throw distance (est.)</span>
-                        <span class="metric-value">159 ft</span>
+                        <span class="metric-value">302 ft</span>
                     </div>
-                    <div class="metric-row">
+                    <div class="metric-row" style="margin-left: 16px;">
                         <span class="metric-label">Throw time (est.)</span>
-                        <span class="metric-value">2.39s</span>
+                        <span class="metric-value">3.54s</span>
                     </div>
                     <div class="metric-row">
                         <span class="metric-label">Scoring window (est.)</span>
-                        <span class="metric-value positive">+2.64s</span>
+                        <span class="metric-value positive">+0.71s</span>
                     </div>
                     <div class="section-takeaway">
-                        <strong>Takeaway:</strong> Positive scoring window means the runner is estimated to beat the throw by 2.64s. The timing favors the runner.
+                        <strong>Takeaway:</strong> With behavior and movement patterns estimated for the players, the model believes Bader will beat the throw by 0.71 seconds, giving him an 86% chance to score.
                     </div>
                 </div>
                 <div class="comparison-col">
                     <div class="comparison-label">With Player Tracking</div>
+                    <div class="metric-row">
+                        <span class="metric-label">Fielder starting location</span>
+                        <span class="metric-value placeholder">[measured]</span>
+                    </div>
                     <div class="metric-row">
                         <span class="metric-label">Time to field</span>
                         <span class="metric-value placeholder">[measured]</span>
@@ -360,16 +368,16 @@
                         <span class="metric-label">Throw distance</span>
                         <span class="metric-value placeholder">[measured]</span>
                     </div>
-                    <div class="metric-row">
+                    <div class="metric-row" style="margin-left: 16px;">
                         <span class="metric-label">Throw time</span>
-                        <span class="metric-value placeholder">[measured]</span>
+                        <span class="metric-value placeholder">Est. from accurate throw dist.</span>
                     </div>
                     <div class="metric-row">
                         <span class="metric-label">Scoring window</span>
-                        <span class="metric-value placeholder">[from actuals]</span>
+                        <span class="metric-value placeholder">Est. from accurate throw dist.</span>
                     </div>
                     <div class="section-takeaway">
-                        <strong>Takeaway:</strong> With true runner position after hesitation, scoring window would be calculated from actual measurements rather than estimates.
+                        <strong>Takeaway:</strong> Knowing that Bader had already rounded third base at the moment the left fielder played the ball, the model would have provided a significantly higher likelihood to score.
                     </div>
                 </div>
             </div>
@@ -386,33 +394,33 @@
                     <div class="comparison-label">Current Model</div>
                     <div class="metric-row">
                         <span class="metric-label">Scoring probability</span>
-                        <span class="metric-value">98.6%</span>
+                        <span class="metric-value">74.5%</span>
                     </div>
                     <div class="metric-row">
                         <span class="metric-label">WP if send</span>
-                        <span class="metric-value">97.9%</span>
+                        <span class="metric-value">61.7%</span>
                     </div>
                     <div class="metric-row">
                         <span class="metric-label">WP if hold</span>
-                        <span class="metric-value">53.9%</span>
+                        <span class="metric-value">98.9%</span>
                     </div>
                     <div class="metric-row">
                         <span class="metric-label">WP delta</span>
-                        <span class="metric-value positive">+44.0%</span>
+                        <span class="metric-value negative">-37.1%</span>
                     </div>
-                    <div class="recommendation-box send">
+                    <div class="recommendation-box hold">
                         <div class="recommendation-label">Recommendation</div>
-                        <div class="recommendation-value">Send the runner</div>
+                        <div class="recommendation-value">Hold the runner</div>
                     </div>
                     <div class="outcome-note">
-                        <strong>Actual outcome:</strong> Coach sent runner. Harrison Bader scored. Model correctly classifies this as a correct send.
+                        <strong>Actual outcome:</strong> Coach sent runner. Harrison Bader scored. Model classifies this as a suboptimal send due to the risk involved.
                     </div>
                 </div>
                 <div class="comparison-col">
                     <div class="comparison-label">With Player Tracking</div>
                     <div class="metric-row">
                         <span class="metric-label">Scoring probability</span>
-                        <span class="metric-value placeholder">[similar or adjusted]</span>
+                        <span class="metric-value placeholder">[higher than estimated]</span>
                     </div>
                     <div class="metric-row">
                         <span class="metric-label">WP if send</span>
@@ -420,18 +428,18 @@
                     </div>
                     <div class="metric-row">
                         <span class="metric-label">WP if hold</span>
-                        <span class="metric-value">53.9%</span>
+                        <span class="metric-value">98.9%</span>
                     </div>
                     <div class="metric-row">
                         <span class="metric-label">WP delta</span>
-                        <span class="metric-value placeholder">[more precise]</span>
+                        <span class="metric-value placeholder">[closer to zero or positive]</span>
                     </div>
                     <div class="recommendation-box send">
-                        <div class="recommendation-label">Recommendation</div>
+                        <div class="recommendation-label">Likely Recommendation</div>
                         <div class="recommendation-value">Send the runner</div>
                     </div>
                     <div class="outcome-note">
-                        With player tracking, we would know the runner's exact position and delay, giving a more precise scoring probability rather than relying on category-based estimates.
+                        With player tracking showing Bader's advanced position, the model would likely recommend sending—aligning with what actually happened and the successful outcome.
                     </div>
                 </div>
             </div>
