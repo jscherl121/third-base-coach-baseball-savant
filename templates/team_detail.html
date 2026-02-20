@@ -6,17 +6,14 @@
 <div class="container">
     <section class="section">
         <div class="breadcrumb">
-            <a href="{{ url_for('teams') }}">Teams</a> / {{ team.name }}
+            <a href="{{ url_for('leaderboards') }}">Leaderboards</a> / {{ team.name }}
         </div>
 
         <!-- Team Header -->
         <div class="detail-header" style="margin-bottom: var(--space-5);">
             <div class="team-badge" style="width: 80px; height: 80px; font-size: 1.5rem;">{{ team.name }}</div>
             <div>
-                <h1 style="margin-bottom: 4px;">{{ team.full_name }}</h1>
-                <p style="color: var(--gray-600); margin: 0;">
-                    Third Base Coach Decision Analysis | 2025 Season
-                </p>
+                <h1 style="margin-bottom: 4px;">{{ team.coach_name }} <span style="font-weight: 400;">({{ team.full_name }})</span></h1>
             </div>
         </div>
 

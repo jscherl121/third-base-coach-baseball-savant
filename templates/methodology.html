@@ -75,46 +75,6 @@
         color: var(--gray-500);
         margin-bottom: 2px;
     }
-    .timeline-viz {
-        position: relative;
-        height: 120px;
-        background: linear-gradient(to right, #fef2f2 0%, #fef2f2 40%, #fffbeb 40%, #fffbeb 50%, #f0fdf4 50%, #f0fdf4 100%);
-        border-radius: 8px;
-        margin: var(--space-4) 0;
-        overflow: hidden;
-    }
-    .timeline-track {
-        position: absolute;
-        top: 50%;
-        left: 5%;
-        right: 5%;
-        height: 4px;
-        background: var(--gray-300);
-        transform: translateY(-50%);
-    }
-    .timeline-marker {
-        position: absolute;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        border: 3px solid white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    .timeline-label {
-        position: absolute;
-        font-size: 0.75rem;
-        font-weight: 500;
-        white-space: nowrap;
-    }
-    .zone-label {
-        position: absolute;
-        bottom: 8px;
-        font-size: 0.7rem;
-        color: var(--gray-600);
-        text-align: center;
-    }
 </style>
 {% endblock %}
 
@@ -134,219 +94,222 @@
 
         <!-- MODEL TAB -->
         <div id="model" class="tab-content active">
-            <!-- The Problem -->
+
+            <!-- Overview: The Pipeline -->
             <div class="card" style="margin-bottom: var(--space-5);">
                 <div class="card-header">
-                    <h3 class="card-title">The Core Question</h3>
+                    <h3 class="card-title">How the Model Works</h3>
                 </div>
                 <p style="color: var(--gray-700); margin-bottom: var(--space-4);">
-                    When a single is hit with a runner on second base, should the third base coach send the runner home or hold them at third? This model answers that question using <strong>Win Probability</strong> rather than outcomes.
+                    As a runner rounds third base, the third base coach must decide in real time whether to send the runner home or hold him at third. This model reconstructs that decision using Statcast data and physics-based timing estimates to calculate the win probability-optimal choice, then evaluates whether the coach's actual decision aligned with that recommendation. The dataset includes 2025 at-bats with a runner on second base and a single was hit (excluding infield singles).
                 </p>
 
-                <!-- Visual: Decision Tree -->
-                <div class="viz-container">
-                    <div style="text-align: center; margin-bottom: var(--space-3);">
-                        <strong style="color: var(--gray-700);">The Send/Hold Decision</strong>
-                    </div>
-                    <div style="display: flex; justify-content: center; gap: var(--space-6); flex-wrap: wrap;">
-                        <div style="text-align: center;">
-                            <div style="background: var(--success); color: white; padding: var(--space-3) var(--space-4); border-radius: 8px; font-weight: 600;">SEND</div>
-                            <div style="margin-top: var(--space-2); font-size: 0.85rem; color: var(--gray-600);">
-                                <div style="color: var(--success);">Runner scores (97%)</div>
-                                <div style="color: var(--danger);">Runner out (3%)</div>
-                            </div>
+                <!-- Pipeline Visual -->
+                <div class="viz-container" style="background: white; border: 1px solid #e5e7eb;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                        <div style="text-align: center; flex: 1; min-width: 140px;">
+                            <div style="background: #dbeafe; color: #1e40af; padding: 12px 16px; border-radius: 8px; font-weight: 600; font-size: 0.9rem;">Step 1</div>
+                            <div style="margin-top: 8px; font-size: 0.8rem; color: #4b5563;">Estimate scoring probability</div>
                         </div>
-                        <div style="display: flex; align-items: center; color: var(--gray-400); font-weight: 600;">vs</div>
-                        <div style="text-align: center;">
-                            <div style="background: var(--warning); color: white; padding: var(--space-3) var(--space-4); border-radius: 8px; font-weight: 600;">HOLD</div>
-                            <div style="margin-top: var(--space-2); font-size: 0.85rem; color: var(--gray-600);">
-                                <div>Runner stays at 3rd</div>
-                                <div>Still has chance to score</div>
-                            </div>
+                        <div style="color: #9ca3af; font-size: 1.5rem;">&rarr;</div>
+                        <div style="text-align: center; flex: 1; min-width: 140px;">
+                            <div style="background: #fef3c7; color: #92400e; padding: 12px 16px; border-radius: 8px; font-weight: 600; font-size: 0.9rem;">Step 2</div>
+                            <div style="margin-top: 8px; font-size: 0.8rem; color: #4b5563;">Calculate win probability</div>
+                        </div>
+                        <div style="color: #9ca3af; font-size: 1.5rem;">&rarr;</div>
+                        <div style="text-align: center; flex: 1; min-width: 140px;">
+                            <div style="background: #d1fae5; color: #065f46; padding: 12px 16px; border-radius: 8px; font-weight: 600; font-size: 0.9rem;">Step 3</div>
+                            <div style="margin-top: 8px; font-size: 0.8rem; color: #4b5563;">Determine optimal decision</div>
+                        </div>
+                        <div style="color: #9ca3af; font-size: 1.5rem;">&rarr;</div>
+                        <div style="text-align: center; flex: 1; min-width: 140px;">
+                            <div style="background: #ede9fe; color: #5b21b6; padding: 12px 16px; border-radius: 8px; font-weight: 600; font-size: 0.9rem;">Evaluate</div>
+                            <div style="margin-top: 8px; font-size: 0.8rem; color: #4b5563;">Compare to coach decision</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Win Probability Framework -->
-            <div class="card" style="margin-bottom: var(--space-5);">
+            <!-- Step 1: Scoring Probability -->
+            <div class="card" style="margin-bottom: var(--space-5); border-left: 4px solid #3b82f6;">
                 <div class="card-header">
-                    <h3 class="card-title">Win Probability Framework</h3>
+                    <h3 class="card-title">Step 1: Estimate Scoring Probability</h3>
                 </div>
                 <p style="color: var(--gray-700); margin-bottom: var(--space-4);">
-                    Decisions are evaluated using <strong>Win Probability (WP)</strong>, which naturally weights each run by game leverage. A run in a tie game in the 9th is worth more than a run up 5 in the 3rd.
+                    The model estimates <strong>P(score)</strong>: the probability the runner scores if sent home. A logistic regression model trained on historical send attempts combines 22 features from Statcast tracking data with physics-based timing calculations.
+                </p>
+
+                <h4 style="margin-bottom: var(--space-3); font-size: 0.9rem; color: #374151;">Model Features</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: var(--space-4);">
+                    <div>
+                        <div style="font-weight: 600; color: #1f2937; margin-bottom: 8px; font-size: 0.85rem;">Runner & Fielder</div>
+                        <ul style="margin: 0; padding-left: 1.25rem; color: #4b5563; font-size: 0.85rem; line-height: 1.7;">
+                            <li>Runner sprint speed (ft/s)</li>
+                            <li>Fielder arm strength (mph)</li>
+                            <li>Fielder positioning depth*</li>
+                            <li>Throw distance to home plate*</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div style="font-weight: 600; color: #1f2937; margin-bottom: 8px; font-size: 0.85rem;">Batted Ball</div>
+                        <ul style="margin: 0; padding-left: 1.25rem; color: #4b5563; font-size: 0.85rem; line-height: 1.7;">
+                            <li>Exit velocity and launch angle</li>
+                            <li>Hit distance and landing location</li>
+                            <li>Hang time*</li>
+                            <li>Batted ball type (ground ball, line drive, fly ball)</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div style="font-weight: 600; color: #1f2937; margin-bottom: 8px; font-size: 0.85rem;">Timing</div>
+                        <ul style="margin: 0; padding-left: 1.25rem; color: #4b5563; font-size: 0.85rem; line-height: 1.7;">
+                            <li>Time to field the ball*</li>
+                            <li>Transfer time (catch to release)*</li>
+                            <li>Throw flight time to home*</li>
+                            <li>Runner travel time (2nd to home)*</li>
+                        </ul>
+                    </div>
+                </div>
+                <p style="font-size: 0.75rem; color: #6b7280;">* Estimated from physics or historical averages. All other features are directly measured by Statcast.</p>
+            </div>
+
+            <!-- Step 2: Win Probability -->
+            <div class="card" style="margin-bottom: var(--space-5); border-left: 4px solid #f59e0b;">
+                <div class="card-header">
+                    <h3 class="card-title">Step 2: Calculate Win Probability for Each Outcome</h3>
+                </div>
+                <p style="color: var(--gray-700); margin-bottom: var(--space-4);">
+                    Next, we look up the win probability for each possible outcome using historical MLB data. This is where game context matters: the same run is worth more in a tie game in the 9th than up 5 in the 3rd.
+                </p>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: var(--space-4);">
+                    <div style="background: #f0fdf4; padding: 1rem; border-radius: 8px; text-align: center;">
+                        <div style="font-weight: 600; color: #166534;">If Runner Scores</div>
+                        <div style="font-size: 0.85rem; color: #4b5563; margin-top: 4px;">WP with +1 run, runner on 1B</div>
+                    </div>
+                    <div style="background: #fef2f2; padding: 1rem; border-radius: 8px; text-align: center;">
+                        <div style="font-weight: 600; color: #991b1b;">If Runner Is Out</div>
+                        <div style="font-size: 0.85rem; color: #4b5563; margin-top: 4px;">WP with +1 out, runner on 1B</div>
+                    </div>
+                    <div style="background: #fefce8; padding: 1rem; border-radius: 8px; text-align: center;">
+                        <div style="font-weight: 600; color: #854d0e;">If Runner Holds</div>
+                        <div style="font-size: 0.85rem; color: #4b5563; margin-top: 4px;">WP with runners on 1B & 3B</div>
+                    </div>
+                </div>
+
+                <!-- Bar Chart - Fixed with explicit colors -->
+                <div class="viz-container">
+                    <div style="text-align: center; margin-bottom: var(--space-3);">
+                        <strong style="color: var(--gray-700);">Why Context Matters: Value of 1 Run</strong>
+                        <div style="font-size: 0.8rem; color: #6b7280;">Win probability gained by scoring</div>
+                    </div>
+                    <div style="display: flex; align-items: flex-end; justify-content: space-around; height: 140px; padding: 0 10px;">
+                        <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
+                            <div style="font-size: 0.7rem; color: #6b7280; margin-bottom: 4px;">5%</div>
+                            <div style="width: 32px; height: 28px; background: #9ca3af; border-radius: 4px 4px 0 0;"></div>
+                            <div style="font-size: 0.65rem; color: #6b7280; margin-top: 6px; text-align: center; line-height: 1.2;">Up 5<br>3rd</div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
+                            <div style="font-size: 0.7rem; color: #6b7280; margin-bottom: 4px;">8%</div>
+                            <div style="width: 32px; height: 45px; background: #6b7280; border-radius: 4px 4px 0 0;"></div>
+                            <div style="font-size: 0.65rem; color: #6b7280; margin-top: 6px; text-align: center; line-height: 1.2;">Up 2<br>5th</div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
+                            <div style="font-size: 0.7rem; color: #6b7280; margin-bottom: 4px;">12%</div>
+                            <div style="width: 32px; height: 67px; background: #6366f1; border-radius: 4px 4px 0 0;"></div>
+                            <div style="font-size: 0.65rem; color: #6b7280; margin-top: 6px; text-align: center; line-height: 1.2;">Tied<br>7th</div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
+                            <div style="font-size: 0.7rem; color: #6b7280; margin-bottom: 4px;">18%</div>
+                            <div style="width: 32px; height: 100px; background: #2563eb; border-radius: 4px 4px 0 0;"></div>
+                            <div style="font-size: 0.65rem; color: #6b7280; margin-top: 6px; text-align: center; line-height: 1.2;">Tied<br>9th</div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
+                            <div style="font-size: 0.7rem; color: #6b7280; margin-bottom: 4px;">20%</div>
+                            <div style="width: 32px; height: 112px; background: #22c55e; border-radius: 4px 4px 0 0;"></div>
+                            <div style="font-size: 0.65rem; color: #6b7280; margin-top: 6px; text-align: center; line-height: 1.2;">Down 1<br>Bot 9</div>
+                        </div>
+                    </div>
+                    <p style="font-size: 0.8rem; color: #6b7280; text-align: center; margin-top: var(--space-3);">
+                        A run in a walk-off situation is worth 4x more than in a blowout
+                    </p>
+                </div>
+            </div>
+
+            <!-- Step 3: Compare -->
+            <div class="card" style="margin-bottom: var(--space-5); border-left: 4px solid #22c55e;">
+                <div class="card-header">
+                    <h3 class="card-title">Step 3: Compare Win Probabilities</h3>
+                </div>
+                <p style="color: var(--gray-700); margin-bottom: var(--space-4);">
+                    We calculate the expected win probability for each choice and compare them.
                 </p>
 
                 <div class="formula-block" style="margin-bottom: var(--space-4);">
                     <div style="margin-bottom: var(--space-3);">
                         <strong>Expected WP if Send:</strong><br>
-                        WP_send = P(score) &times; WP(run scores) + (1 - P(score)) &times; WP(out at home)
+                        <code>WP_send = P(score) &times; WP(scored) + P(out) &times; WP(out)</code>
                     </div>
                     <div style="margin-bottom: var(--space-3);">
                         <strong>Expected WP if Hold:</strong><br>
-                        WP_hold = WP(runner at 3B, batter at 1B)
+                        <code>WP_hold = WP(runners on 1B & 3B)</code>
                     </div>
-                    <div>
-                        <strong>Decision Rule:</strong> Send if WP_send > WP_hold
+                    <div style="padding-top: var(--space-2); border-top: 1px solid #e5e7eb;">
+                        <strong>Recommendation:</strong> Send if WP_send > WP_hold
                     </div>
                 </div>
 
-                <!-- Visual: Run Value by Game State -->
-                <div class="viz-container">
-                    <div style="text-align: center; margin-bottom: var(--space-3);">
-                        <strong style="color: var(--gray-700);">Run Value Changes by Game State</strong>
-                        <div style="font-size: 0.8rem; color: var(--gray-500);">How much 1 run is worth in Win Probability</div>
-                    </div>
-                    <div class="bar-chart">
-                        <div class="bar-group">
-                            <div class="bar-value">5%</div>
-                            <div class="bar" style="height: 25%; background: var(--gray-400);"></div>
-                            <div class="bar-label">Up 5<br>3rd inn</div>
+                <div class="viz-container" style="background: white; border: 1px solid #e5e7eb;">
+                    <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
+                        <div style="text-align: center;">
+                            <div style="background: #22c55e; color: white; padding: 16px 24px; border-radius: 8px; font-weight: 600;">SEND</div>
+                            <div style="margin-top: 8px; font-size: 0.85rem; color: #6b7280;">If WP_send > WP_hold</div>
                         </div>
-                        <div class="bar-group">
-                            <div class="bar-value">8%</div>
-                            <div class="bar" style="height: 40%; background: var(--gray-500);"></div>
-                            <div class="bar-label">Up 2<br>5th inn</div>
-                        </div>
-                        <div class="bar-group">
-                            <div class="bar-value">12%</div>
-                            <div class="bar" style="height: 60%; background: var(--secondary);"></div>
-                            <div class="bar-label">Tied<br>7th inn</div>
-                        </div>
-                        <div class="bar-group">
-                            <div class="bar-value">18%</div>
-                            <div class="bar" style="height: 90%; background: var(--primary);"></div>
-                            <div class="bar-label">Tied<br>9th inn</div>
-                        </div>
-                        <div class="bar-group">
-                            <div class="bar-value">20%</div>
-                            <div class="bar" style="height: 100%; background: var(--success);"></div>
-                            <div class="bar-label">Down 1<br>Bot 9</div>
+                        <div style="text-align: center;">
+                            <div style="background: #f59e0b; color: white; padding: 16px 24px; border-radius: 8px; font-weight: 600;">HOLD</div>
+                            <div style="margin-top: 8px; font-size: 0.85rem; color: #6b7280;">If WP_hold &ge; WP_send</div>
                         </div>
                     </div>
-                    <p style="font-size: 0.8rem; color: var(--gray-600); text-align: center; margin-top: var(--space-2);">
-                        The same run can be worth 4x more in a close late-game situation
-                    </p>
                 </div>
             </div>
 
-            <!-- Scoring Probability -->
-            <div class="card" style="margin-bottom: var(--space-5);">
+            <!-- Evaluate: Grade the Coach -->
+            <div class="card" style="margin-bottom: var(--space-5); border-left: 4px solid #8b5cf6;">
                 <div class="card-header">
-                    <h3 class="card-title">Scoring Probability Model</h3>
+                    <h3 class="card-title">Step 4: Evaluate the Coach's Decision</h3>
                 </div>
                 <p style="color: var(--gray-700); margin-bottom: var(--space-4);">
-                    The key input is <strong>P(score)</strong>: the probability the runner scores if sent. This is estimated using logistic regression trained on 22 features from Statcast data.
+                    Finally, we compare the model's recommendation to what the third base coach actually decided. Did they maximize win probability?
                 </p>
 
-                <h4 style="margin-bottom: var(--space-3);">Primary Features</h4>
-                <div class="feature-grid" style="margin-bottom: var(--space-4);">
-                    <div class="feature-item">
-                        <div class="feature-icon">S</div>
-                        <div>
-                            <div class="feature-name">Runner Sprint Speed</div>
-                            <div class="feature-desc">Statcast-tracked (ft/s)</div>
-                        </div>
-                    </div>
-                    <div class="feature-item">
-                        <div class="feature-icon">A</div>
-                        <div>
-                            <div class="feature-name">Fielder Arm Strength</div>
-                            <div class="feature-desc">Max throw velocity (mph)</div>
-                        </div>
-                    </div>
-                    <div class="feature-item">
-                        <div class="feature-icon">D</div>
-                        <div>
-                            <div class="feature-name">Throw Distance</div>
-                            <div class="feature-desc">Catch location to home (ft)</div>
-                        </div>
-                    </div>
-                    <div class="feature-item">
-                        <div class="feature-icon">T</div>
-                        <div>
-                            <div class="feature-name">Hang Time</div>
-                            <div class="feature-desc">Ball flight duration (s)</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Visual: Scoring Window Spectrum -->
-                <div class="viz-container">
-                    <div style="text-align: center; margin-bottom: var(--space-3);">
-                        <strong style="color: var(--gray-700);">Scoring Window: Runner vs. Throw Timing</strong>
-                    </div>
-                    <div class="timeline-viz">
-                        <div class="timeline-track"></div>
-                        <!-- Markers -->
-                        <div class="timeline-marker" style="left: 20%; background: var(--danger);"></div>
-                        <div class="timeline-marker" style="left: 45%; background: var(--warning);"></div>
-                        <div class="timeline-marker" style="left: 75%; background: var(--success);"></div>
-                        <!-- Labels -->
-                        <div class="timeline-label" style="left: 20%; top: 15%; transform: translateX(-50%);">-1.0s</div>
-                        <div class="timeline-label" style="left: 45%; top: 15%; transform: translateX(-50%);">0s</div>
-                        <div class="timeline-label" style="left: 75%; top: 15%; transform: translateX(-50%);">+1.5s</div>
-                        <!-- Zone labels -->
-                        <div class="zone-label" style="left: 20%; width: 40%;">Throw beats runner</div>
-                        <div class="zone-label" style="left: 45%; width: 10%;">Close</div>
-                        <div class="zone-label" style="left: 75%; width: 30%;">Runner beats throw</div>
-                    </div>
-                    <p style="font-size: 0.8rem; color: var(--gray-600); text-align: center;">
-                        Positive window = runner has margin to score. Negative = throw arrives first.
-                    </p>
-                </div>
-
-                <h4 style="margin-bottom: var(--space-3);">Model Performance</h4>
-                <div class="grid-3" style="margin-bottom: var(--space-4);">
-                    <div style="text-align: center;">
-                        <div style="font-size: 1.75rem; font-weight: 700; font-family: var(--font-mono); color: var(--secondary);">0.723</div>
-                        <div style="font-size: 0.75rem; color: var(--gray-600); text-transform: uppercase;">ROC AUC</div>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 1.75rem; font-weight: 700; font-family: var(--font-mono); color: var(--success);">97.2%</div>
-                        <div style="font-size: 0.75rem; color: var(--gray-600); text-transform: uppercase;">Calibration</div>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 1.75rem; font-weight: 700; font-family: var(--font-mono);">22</div>
-                        <div style="font-size: 0.75rem; color: var(--gray-600); text-transform: uppercase;">Features</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Decision Classification -->
-            <div class="card" style="margin-bottom: var(--space-5);">
-                <div class="card-header">
-                    <h3 class="card-title">Decision Classification</h3>
-                </div>
                 <div class="table-wrapper">
                     <table>
                         <thead>
                             <tr>
                                 <th>Classification</th>
-                                <th>What Happened</th>
-                                <th>Model Says</th>
+                                <th>Coach Decision</th>
+                                <th>Model Recommendation</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td><span class="badge badge-success">Correct Send</span></td>
-                                <td>Runner was sent</td>
-                                <td>WP_send > WP_hold</td>
+                                <td>Sent the runner</td>
+                                <td>Send (WP_send > WP_hold)</td>
                             </tr>
                             <tr>
                                 <td><span class="badge badge-success">Correct Hold</span></td>
-                                <td>Runner was held</td>
-                                <td>WP_hold &ge; WP_send</td>
+                                <td>Held the runner</td>
+                                <td>Hold (WP_hold &ge; WP_send)</td>
                             </tr>
                             <tr>
                                 <td><span class="badge badge-danger">Missed Opportunity</span></td>
-                                <td>Runner was held</td>
-                                <td>WP_send > WP_hold</td>
+                                <td>Held the runner</td>
+                                <td>Send (WP_send > WP_hold)</td>
                             </tr>
                             <tr>
                                 <td><span class="badge badge-warning">Suboptimal Send</span></td>
-                                <td>Runner was sent</td>
-                                <td>WP_hold > WP_send</td>
+                                <td>Sent the runner</td>
+                                <td>Hold (WP_hold > WP_send)</td>
                             </tr>
                         </tbody>
                     </table>
@@ -358,13 +321,13 @@
                 <h4>Limitations</h4>
                 <ul style="margin: 0; padding-left: var(--space-4);">
                     <li style="margin-bottom: var(--space-2);">
-                        <strong>Selection Bias:</strong> Coaches send runners selectively, producing 97% success rates. The model is trained on this selected sample.
+                        <strong>Selection Bias:</strong> Coaches send runners selectively, so we only observe outcomes for plays they chose to send. The 97% success rate reflects pre-selection.
                     </li>
                     <li style="margin-bottom: var(--space-2);">
-                        <strong>Estimated Inputs:</strong> Fielder catch locations and runner reaction times are estimated from trajectory data.
+                        <strong>Estimated Inputs:</strong> Fielder catch locations and runner reaction times are estimated from trajectory data, not directly observed.
                     </li>
                     <li>
-                        <strong>Unmodeled Factors:</strong> Catcher positioning, relay throws, and defensive shifts are not captured.
+                        <strong>Unmodeled Factors:</strong> Catcher positioning, relay throws, defensive alignments, and runner anticipation are not captured.
                     </li>
                 </ul>
             </div>
@@ -387,11 +350,10 @@
             <div class="callout" style="margin-bottom: var(--space-5);">
                 <h3>Time to Field</h3>
                 <p><strong>What it is:</strong> Time from bat contact until the fielder picks up the ball.</p>
-                <p><strong>How it's calculated:</strong> Different approaches based on launch angle:</p>
+                <p><strong>How it's calculated:</strong> Two components are combined:</p>
                 <ul>
-                    <li><strong>Ground balls (LA < 10°):</strong> Ball lands quickly then rolls. Total = distance ÷ ground speed.</li>
-                    <li><strong>Line drives (LA 10-25°):</strong> Fastest balls—horizontal velocity dominates.</li>
-                    <li><strong>Fly balls (LA > 25°):</strong> Projectile motion physics determines hang time.</li>
+                    <li><strong>Ball trajectory:</strong> Based on launch angle—ground balls land quickly then roll, line drives travel fast horizontally, fly balls follow projectile motion physics.</li>
+                    <li><strong>Fielder movement:</strong> Starting from the outfielder's average positioning depth, we calculate where they can run during the ball's flight time (accounting for reaction time and sprint speed) to determine the intercept point.</li>
                 </ul>
             </div>
 

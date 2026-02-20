@@ -1,0 +1,368 @@
+{% extends "base.html" %}
+
+{% block title %}Ideal State - Third Base Send Model{% endblock %}
+
+{% block head %}
+<style>
+    .intro-text {
+        font-size: 0.9rem;
+        color: var(--gray-700);
+        line-height: 1.7;
+        margin-bottom: var(--space-3);
+    }
+    .play-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: var(--space-6);
+        padding: 10px 16px;
+        background: var(--gray-100);
+        border: 1px solid var(--gray-300);
+        border-radius: 6px;
+        color: var(--primary);
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    .play-link:hover {
+        background: var(--gray-200);
+    }
+    .step-card {
+        background: white;
+        border: 1px solid var(--gray-200);
+        border-radius: 8px;
+        margin-bottom: var(--space-5);
+        overflow: hidden;
+    }
+    .step-header {
+        background: var(--gray-50);
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--gray-200);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .step-number {
+        background: var(--gray-700);
+        color: white;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+    .step-title {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--gray-800);
+    }
+    .step-image {
+        padding: 16px;
+        background: var(--gray-50);
+        display: flex;
+        justify-content: center;
+        border-bottom: 1px solid var(--gray-200);
+    }
+    .step-image img {
+        width: 100%;
+        max-width: 600px;
+        border-radius: 6px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+    .comparison-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+    }
+    .comparison-table th {
+        background: var(--gray-100);
+        padding: 10px 12px;
+        text-align: left;
+        font-weight: 600;
+        color: var(--gray-700);
+        border-bottom: 1px solid var(--gray-200);
+    }
+    .comparison-table th:first-child {
+        width: 35%;
+    }
+    .comparison-table th:not(:first-child) {
+        width: 32.5%;
+        text-align: center;
+    }
+    .comparison-table td {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--gray-100);
+        color: var(--gray-700);
+    }
+    .comparison-table td:first-child {
+        color: var(--gray-600);
+        font-weight: 500;
+    }
+    .comparison-table td:not(:first-child) {
+        text-align: center;
+        font-weight: 600;
+        color: var(--gray-800);
+    }
+    .comparison-table tr:last-child td {
+        border-bottom: none;
+    }
+    .comparison-table tr:hover {
+        background: var(--gray-50);
+    }
+    .comparison-table .indent {
+        padding-left: 28px;
+    }
+    .comparison-table .negative {
+        color: var(--danger);
+    }
+    .comparison-table .positive {
+        color: var(--success);
+    }
+    .table-wrapper {
+        padding: 16px;
+    }
+    .section-takeaway-full {
+        font-size: 0.85rem;
+        color: var(--gray-600);
+        padding: 12px 16px;
+        background: var(--gray-50);
+        border-top: 1px solid var(--gray-200);
+    }
+    .section-takeaway-full strong {
+        color: var(--gray-700);
+    }
+    @media (max-width: 768px) {
+        .comparison-table {
+            font-size: 0.8rem;
+        }
+        .comparison-table th,
+        .comparison-table td {
+            padding: 6px 8px;
+        }
+        .section-takeaway-full {
+            font-size: 0.8rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <section class="section">
+        <div class="page-header">
+            <h1>Ideal State</h1>
+            <p>A comparison of the current model to one with player location tracking data</p>
+        </div>
+
+        <p class="intro-text">
+            This model uses publicly available Statcast data from Baseball Savant, which critically <strong>does not include player location tracking</strong>. An enhanced and more complete version of this project uses player tracking data to know exactly where the runner and fielders are at every moment.
+        </p>
+
+        <p class="intro-text">
+            The following walkthrough compares <strong>what the model currently estimates</strong> with what it would include <strong>with full player tracking data</strong>.
+        </p>
+
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: var(--space-6);">
+            <a href="https://baseballsavant.mlb.com/sporty-videos?playId=c49c7570-b4d4-3b22-9ee9-fdf35e8441d8" target="_blank" class="play-link" style="margin-bottom: 0;">
+                Watch this play on Baseball Savant
+            </a>
+            <a href="{{ url_for('play_detail', play_id=5000) }}" class="play-link" style="margin-bottom: 0;">
+                View the decision analysis for this play
+            </a>
+        </div>
+
+        <!-- Step 1: Batted Ball Data -->
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">1</div>
+                <div class="step-title">Batted Ball Data</div>
+            </div>
+            <div class="step-image">
+                <img src="{{ url_for('static', filename='images/twins_1.png') }}" alt="Moment of contact">
+            </div>
+            <div class="table-wrapper">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Current Model</th>
+                            <th>With Player Tracking</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Exit Velocity</td>
+                            <td>103.5 mph</td>
+                            <td>103.5 mph</td>
+                        </tr>
+                        <tr>
+                            <td>Launch Angle</td>
+                            <td>10°</td>
+                            <td>10°</td>
+                        </tr>
+                        <tr>
+                            <td>Hit Distance</td>
+                            <td>220 ft</td>
+                            <td>220 ft</td>
+                        </tr>
+                        <tr>
+                            <td>Landing Location</td>
+                            <td>Left field</td>
+                            <td>Left field</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="section-takeaway-full">
+                <strong>Takeaway:</strong> Batted ball information is present in both, although it will be relied upon more frequently in the current model.
+            </div>
+        </div>
+
+        <!-- Step 2: Runner Data -->
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">2</div>
+                <div class="step-title">Runner Data</div>
+            </div>
+            <div class="step-image">
+                <img src="{{ url_for('static', filename='images/twins_2.png') }}" alt="Runner reacting to ball">
+            </div>
+            <div class="table-wrapper">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Current Model</th>
+                            <th>With Player Tracking</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Runner Reaction</td>
+                            <td>Hesitates (Est.)</td>
+                            <td>Observed</td>
+                        </tr>
+                        <tr>
+                            <td>Runner Delay</td>
+                            <td>0.8s (Est.)</td>
+                            <td>Measured</td>
+                        </tr>
+                        <tr>
+                            <td>Runner Lead Distance</td>
+                            <td>Unknown</td>
+                            <td>Measured</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="section-takeaway-full">
+                <strong>Takeaway:</strong> The current model assumes the runner hesitated for 0.8 seconds because the hit was a line drive with fewer than two outs. With player tracking data the runner's lead distance, reaction time, and potential delay is directly measured, rather than estimated.
+            </div>
+        </div>
+
+        <!-- Step 3: Fielder Data -->
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">3</div>
+                <div class="step-title">Fielder Data</div>
+            </div>
+            <div class="step-image">
+                <img src="{{ url_for('static', filename='images/twins_3.png') }}" alt="Fielder picking up the ball">
+            </div>
+            <div class="table-wrapper">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Current Model</th>
+                            <th>With Player Tracking</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Fielder Starting Location</td>
+                            <td>297 ft (Est., player season avg)</td>
+                            <td>Measured</td>
+                        </tr>
+                        <tr>
+                            <td>Time to Field</td>
+                            <td>1.88s (Est.)</td>
+                            <td>Measured</td>
+                        </tr>
+                        <tr>
+                            <td>Throw Distance</td>
+                            <td>302 ft (Est.)</td>
+                            <td>Measured</td>
+                        </tr>
+                        <tr>
+                            <td class="indent">Throw Time</td>
+                            <td>3.54s (Est.)</td>
+                            <td>Est. from accurate distance</td>
+                        </tr>
+                        <tr>
+                            <td>Scoring Window</td>
+                            <td class="positive">+0.71s (Est.)</td>
+                            <td>Est. from accurate distance</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="section-takeaway-full">
+                <strong>Takeaway:</strong> Knowing that the runner had already rounded third base at the moment the left fielder played the ball, the player tracking model would have provided a significantly higher likelihood to score.
+            </div>
+        </div>
+
+        <!-- Step 4: Model Recommendation -->
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">4</div>
+                <div class="step-title">Model Recommendation</div>
+            </div>
+            <div class="table-wrapper">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Current Model</th>
+                            <th>With Player Tracking</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Scoring Probability</td>
+                            <td>74.5%</td>
+                            <td>Higher than estimated</td>
+                        </tr>
+                        <tr>
+                            <td>WP if Send</td>
+                            <td>61.7%</td>
+                            <td>Higher than estimated</td>
+                        </tr>
+                        <tr>
+                            <td>WP if Hold</td>
+                            <td>98.9%</td>
+                            <td>98.9%</td>
+                        </tr>
+                        <tr>
+                            <td>WP Delta</td>
+                            <td class="negative">-1.2%</td>
+                            <td>Likely positive</td>
+                        </tr>
+                        <tr>
+                            <td>Recommendation</td>
+                            <td style="color: #dc2626; font-weight: 700;">Hold the runner</td>
+                            <td style="color: #16a34a; font-weight: 700;">Likely send the runner</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="section-takeaway-full">
+                <strong>Takeaway:</strong> The current model classifies this play as a suboptimal send. With player tracking data the model would most likely recommend the coach to send the runner, aligning with his decision.
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

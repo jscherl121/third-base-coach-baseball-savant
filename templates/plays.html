@@ -2,82 +2,236 @@
 
 {% block title %}Play Explorer - Third Base Send Model{% endblock %}
 
+{% block head %}
+<style>
+    .play-stats-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 140px;
+        padding: 8px 12px;
+        background: var(--gray-50);
+        border-radius: 6px;
+    }
+    .play-stat-main {
+        text-align: center;
+        margin-bottom: 8px;
+    }
+    .play-stat-value-lg {
+        font-size: 1.1rem;
+        font-weight: 700;
+        font-family: var(--font-mono);
+    }
+    .play-stat-pct {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--gray-500);
+    }
+    .play-stat-label {
+        font-size: 0.7rem;
+        color: var(--gray-500);
+        text-transform: uppercase;
+        margin-top: 2px;
+    }
+    .play-stat-secondary {
+        display: flex;
+        gap: 12px;
+        font-size: 0.8rem;
+    }
+    .play-stat-value-sm {
+        font-weight: 600;
+        font-family: var(--font-mono);
+    }
+    .play-stat-label-sm {
+        color: var(--gray-500);
+        margin-right: 3px;
+    }
+    .percentile-bar {
+        margin-top: 6px;
+        position: relative;
+        height: 6px;
+        width: 100px;
+    }
+    .percentile-track {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 6px;
+        background: linear-gradient(to right, #dbeafe, #93c5fd, #3b82f6, #1d4ed8);
+        border-radius: 3px;
+    }
+    .percentile-marker {
+        position: absolute;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 12px;
+        height: 12px;
+        background: white;
+        border: 2px solid #1d4ed8;
+        border-radius: 50%;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .filter-group input[type="text"] {
+        width: 140px;
+    }
+    .filter-group input[type="text"]::placeholder {
+        color: var(--gray-500);
+        font-size: 0.8rem;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container">
     <section class="section">
-        <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <div>
-                <h1>Play Explorer</h1>
-                <p>Browse individual plays with model analysis and video links.</p>
-            </div>
-            <div style="color: var(--gray-600); font-size: 0.9rem;">
-                {{ plays|length }} of {{ "{:,}".format(total_plays) }} plays
-            </div>
+        <div class="page-header">
+            <h1>Play Explorer</h1>
+            <p>Browse individual plays with model analysis and video links.</p>
         </div>
 
         <!-- Filters -->
-        <div class="filters">
-            <form action="{{ url_for('plays') }}" method="get" id="filter-form" style="display: contents;">
-                <div class="filter-group">
-                    <label for="team">Team</label>
-                    <select name="team" id="team" class="form-control" onchange="this.form.submit()">
-                        <option value="all" {{ 'selected' if current_team == 'all' else '' }}>All Teams</option>
-                        {% for team in teams %}
-                        <option value="{{ team }}" {{ 'selected' if current_team == team else '' }}>{{ team }}</option>
-                        {% endfor %}
-                    </select>
+        <div class="card" style="padding: 1.25rem; margin-bottom: 1.5rem;">
+            <h3 style="font-size: 0.9rem; font-weight: 600; letter-spacing: 0.02em; color: var(--gray-600); margin-bottom: 1rem;">Filters</h3>
+            <form action="{{ url_for('plays') }}" method="get" id="filter-form">
+                <div style="display: flex; flex-wrap: nowrap; gap: 1rem; margin-bottom: 1rem;">
+                    <div class="filter-group">
+                        <label for="team">Team</label>
+                        <select name="team" id="team" class="form-control" onchange="this.form.submit()">
+                            <option value="all" {{ 'selected' if current_team == 'all' else '' }}>All Teams</option>
+                            {% for team in teams %}
+                            <option value="{{ team }}" {{ 'selected' if current_team == team else '' }}>{{ team }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="decision">Decision</label>
+                        <select name="decision" id="decision" class="form-control" style="width: 160px;" onchange="this.form.submit()">
+                            <option value="all" {{ 'selected' if current_decision == 'all' else '' }}>All</option>
+                            <option value="correct_send" {{ 'selected' if current_decision == 'correct_send' else '' }}>Correct Send</option>
+                            <option value="correct_hold" {{ 'selected' if current_decision == 'correct_hold' else '' }}>Correct Hold</option>
+                            <option value="missed" {{ 'selected' if current_decision == 'missed' else '' }}>Missed Opportunity</option>
+                            <option value="bad_send" {{ 'selected' if current_decision == 'bad_send' else '' }}>Suboptimal Send</option>
+                            <option value="correct" {{ 'selected' if current_decision == 'correct' else '' }}>All Correct Decisions</option>
+                            <option value="mistakes" {{ 'selected' if current_decision == 'mistakes' else '' }}>All Mistakes</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="situation">Situation</label>
+                        <select name="situation" id="situation" class="form-control" onchange="this.form.submit()">
+                            <option value="all" {{ 'selected' if current_situation == 'all' else '' }}>All Situations</option>
+                            <option value="late_close" {{ 'selected' if current_situation == 'late_close' else '' }}>Late & Close</option>
+                            <option value="high_leverage" {{ 'selected' if current_situation == 'high_leverage' else '' }}>High Leverage (LI &gt; 1.5)</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="outcome">Outcome</label>
+                        <select name="outcome" id="outcome" class="form-control" onchange="this.form.submit()">
+                            <option value="all" {{ 'selected' if current_outcome == 'all' else '' }}>All Outcomes</option>
+                            <option value="scored" {{ 'selected' if current_outcome == 'scored' else '' }}>Scored</option>
+                            <option value="out" {{ 'selected' if current_outcome == 'out' else '' }}>Out at Home</option>
+                            <option value="held" {{ 'selected' if current_outcome == 'held' else '' }}>Held at 3rd</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="sort">Sort</label>
+                        <select name="sort" id="sort" class="form-control" style="width: 120px;" onchange="this.form.submit()">
+                            <option value="wp_delta" {{ 'selected' if current_sort == 'wp_delta' else '' }}>WP Delta</option>
+                            <option value="p_score" {{ 'selected' if current_sort == 'p_score' else '' }}>Score Prob.</option>
+                            <option value="scoring_window" {{ 'selected' if current_sort == 'scoring_window' else '' }}>Pred. Window</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="order">Order</label>
+                        <select name="order" id="order" class="form-control" onchange="this.form.submit()">
+                            <option value="desc" {{ 'selected' if current_order == 'desc' else '' }}>High &rarr; Low</option>
+                            <option value="asc" {{ 'selected' if current_order == 'asc' else '' }}>Low &rarr; High</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div class="filter-group">
-                    <label for="decision">Decision</label>
-                    <select name="decision" id="decision" class="form-control" onchange="this.form.submit()">
-                        <option value="all" {{ 'selected' if current_decision == 'all' else '' }}>All</option>
-                        <option value="mistakes" {{ 'selected' if current_decision == 'mistakes' else '' }}>All Mistakes</option>
-                        <option value="missed" {{ 'selected' if current_decision == 'missed' else '' }}>Missed Opportunities</option>
-                        <option value="bad_send" {{ 'selected' if current_decision == 'bad_send' else '' }}>Suboptimal Sends</option>
-                        <option value="correct" {{ 'selected' if current_decision == 'correct' else '' }}>Correct</option>
-                    </select>
-                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;">
+                    <div class="filter-group">
+                        <label for="batter">Batter</label>
+                        <input type="text" list="batter-list" name="batter" id="batter" class="form-control"
+                               value="{{ current_batter if current_batter != 'all' else '' }}"
+                               placeholder="All Batters"
+                               onchange="if(this.value === '') this.value = 'all'; this.form.submit()">
+                        <datalist id="batter-list">
+                            {% for b in batters %}
+                            <option value="{{ b }}">{{ b }}</option>
+                            {% endfor %}
+                        </datalist>
+                    </div>
 
-                <div class="filter-group">
-                    <label for="situation">Situation</label>
-                    <select name="situation" id="situation" class="form-control" onchange="this.form.submit()">
-                        <option value="all" {{ 'selected' if current_situation == 'all' else '' }}>All Situations</option>
-                        <option value="late_close" {{ 'selected' if current_situation == 'late_close' else '' }}>Late & Close</option>
-                        <option value="high_leverage" {{ 'selected' if current_situation == 'high_leverage' else '' }}>High Leverage (LI &gt; 1.5)</option>
-                    </select>
-                </div>
+                    <div class="filter-group">
+                        <label for="runner">Runner</label>
+                        <input type="text" list="runner-list" name="runner" id="runner" class="form-control"
+                               value="{{ current_runner if current_runner != 'all' else '' }}"
+                               placeholder="All Runners"
+                               onchange="if(this.value === '') this.value = 'all'; this.form.submit()">
+                        <datalist id="runner-list">
+                            {% for r in runners %}
+                            <option value="{{ r }}">{{ r }}</option>
+                            {% endfor %}
+                        </datalist>
+                    </div>
 
-                <div class="filter-group">
-                    <label for="outcome">Outcome</label>
-                    <select name="outcome" id="outcome" class="form-control" onchange="this.form.submit()">
-                        <option value="all" {{ 'selected' if current_outcome == 'all' else '' }}>All Outcomes</option>
-                        <option value="scored" {{ 'selected' if current_outcome == 'scored' else '' }}>Scored</option>
-                        <option value="out" {{ 'selected' if current_outcome == 'out' else '' }}>Out at Home</option>
-                        <option value="held" {{ 'selected' if current_outcome == 'held' else '' }}>Held at 3rd</option>
-                    </select>
-                </div>
+                    <div class="filter-group">
+                        <label for="fielder">Fielder</label>
+                        <input type="text" list="fielder-list" name="fielder" id="fielder" class="form-control"
+                               value="{{ current_fielder if current_fielder != 'all' else '' }}"
+                               placeholder="All Fielders"
+                               onchange="if(this.value === '') this.value = 'all'; this.form.submit()">
+                        <datalist id="fielder-list">
+                            {% for f in fielders %}
+                            <option value="{{ f }}">{{ f }}</option>
+                            {% endfor %}
+                        </datalist>
+                    </div>
 
-                <div class="filter-group">
-                    <label for="sort">Sort</label>
-                    <select name="sort" id="sort" class="form-control" onchange="this.form.submit()">
-                        <option value="wp_delta" {{ 'selected' if current_sort == 'wp_delta' else '' }}>WP Delta</option>
-                        <option value="p_score" {{ 'selected' if current_sort == 'p_score' else '' }}>Score Prob</option>
-                        <option value="scoring_window" {{ 'selected' if current_sort == 'scoring_window' else '' }}>Scoring Window</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label for="order">Order</label>
-                    <select name="order" id="order" class="form-control" onchange="this.form.submit()">
-                        <option value="desc" {{ 'selected' if current_order == 'desc' else '' }}>High &rarr; Low</option>
-                        <option value="asc" {{ 'selected' if current_order == 'asc' else '' }}>Low &rarr; High</option>
-                    </select>
+                    <div style="margin-left: auto; padding-bottom: 0.35rem;">
+                        <span style="color: var(--gray-600); font-size: 0.85rem;">{{ plays|length }} of {{ "{:,}".format(total_plays) }} plays</span>
+                    </div>
                 </div>
 
                 <input type="hidden" name="page" value="1">
             </form>
         </div>
+
+        <!-- Active Filters / Clear -->
+        {% if current_team != 'all' or current_decision != 'all' or current_situation != 'all' or current_outcome != 'all' or current_batter != 'all' or current_runner != 'all' or current_fielder != 'all' %}
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap;">
+            <span style="font-size: 0.85rem; color: var(--gray-600);">Active filters:</span>
+            {% if current_team != 'all' %}
+            <span style="background: var(--gray-100); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">Team: {{ current_team }}</span>
+            {% endif %}
+            {% if current_decision != 'all' %}
+            <span style="background: var(--gray-100); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">Decision: {{ current_decision|replace('_', ' ')|title }}</span>
+            {% endif %}
+            {% if current_situation != 'all' %}
+            <span style="background: var(--gray-100); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">Situation: {{ current_situation|replace('_', ' ')|title }}</span>
+            {% endif %}
+            {% if current_outcome != 'all' %}
+            <span style="background: var(--gray-100); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">Outcome: {{ current_outcome|title }}</span>
+            {% endif %}
+            {% if current_batter != 'all' %}
+            <span style="background: var(--gray-100); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">Batter: {{ current_batter }}</span>
+            {% endif %}
+            {% if current_runner != 'all' %}
+            <span style="background: var(--gray-100); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">Runner: {{ current_runner }}</span>
+            {% endif %}
+            {% if current_fielder != 'all' %}
+            <span style="background: var(--gray-100); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">Fielder: {{ current_fielder }}</span>
+            {% endif %}
+            <a href="{{ url_for('plays') }}" style="background: var(--gray-700); color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem; text-decoration: none; margin-left: auto;">Clear Filters</a>
+        </div>
+        {% endif %}
 
         <!-- Plays List -->
         <div class="play-list">
@@ -108,23 +262,47 @@
                         </div>
                     </div>
 
-                    <div class="play-stats">
-                        <div>
-                            <div class="play-stat-value" style="color: {{ 'var(--success)' if play.wp_delta_raw > 0 else 'var(--danger)' if play.wp_delta_raw < 0 else 'inherit' }}">{{ play.wp_delta }}</div>
+                    <div class="play-stats-box">
+                        {% if current_sort == 'wp_delta' %}
+                        <div class="play-stat-main">
+                            <div class="play-stat-value-lg" style="color: {{ 'var(--success)' if play.wp_delta_raw > 0 else 'var(--danger)' if play.wp_delta_raw < 0 else 'inherit' }}">{{ play.wp_delta }} <span class="play-stat-pct">({{ play.wp_delta_pct|int }}th)</span></div>
                             <div class="play-stat-label">WP Delta</div>
+                            <div class="percentile-bar">
+                                <div class="percentile-track"></div>
+                                <div class="percentile-marker" style="left: {{ play.wp_delta_pct }}%;"></div>
+                            </div>
                         </div>
-                        <div>
-                            <div class="play-stat-value">{{ play.p_score }}</div>
-                            <div class="play-stat-label">P(Score)</div>
+                        <div class="play-stat-secondary">
+                            <div><span class="play-stat-label-sm">Score Prob.</span> <span class="play-stat-value-sm">{{ play.p_score }}</span></div>
+                            <div><span class="play-stat-label-sm">Pred. Window</span> <span class="play-stat-value-sm">{{ play.scoring_window }}s</span></div>
                         </div>
-                        <div>
-                            <div class="play-stat-value">{{ play.scoring_window }}s</div>
-                            <div class="play-stat-label">Window</div>
+                        {% elif current_sort == 'p_score' %}
+                        <div class="play-stat-main">
+                            <div class="play-stat-value-lg">{{ play.p_score }} <span class="play-stat-pct">({{ play.p_score_pct|int }}th)</span></div>
+                            <div class="play-stat-label">Score Probability</div>
+                            <div class="percentile-bar">
+                                <div class="percentile-track"></div>
+                                <div class="percentile-marker" style="left: {{ play.p_score_pct }}%;"></div>
+                            </div>
                         </div>
-                        <div>
-                            <div class="play-stat-value">{{ play.runner_speed }}</div>
-                            <div class="play-stat-label">Speed</div>
+                        <div class="play-stat-secondary">
+                            <div><span class="play-stat-label-sm">WP Delta</span> <span class="play-stat-value-sm" style="color: {{ 'var(--success)' if play.wp_delta_raw > 0 else 'var(--danger)' if play.wp_delta_raw < 0 else 'inherit' }}">{{ play.wp_delta }}</span></div>
+                            <div><span class="play-stat-label-sm">Pred. Window</span> <span class="play-stat-value-sm">{{ play.scoring_window }}s</span></div>
                         </div>
+                        {% else %}
+                        <div class="play-stat-main">
+                            <div class="play-stat-value-lg">{{ play.scoring_window }}s <span class="play-stat-pct">({{ play.scoring_window_pct|int }}th)</span></div>
+                            <div class="play-stat-label">Predicted Window</div>
+                            <div class="percentile-bar">
+                                <div class="percentile-track"></div>
+                                <div class="percentile-marker" style="left: {{ play.scoring_window_pct }}%;"></div>
+                            </div>
+                        </div>
+                        <div class="play-stat-secondary">
+                            <div><span class="play-stat-label-sm">WP Delta</span> <span class="play-stat-value-sm" style="color: {{ 'var(--success)' if play.wp_delta_raw > 0 else 'var(--danger)' if play.wp_delta_raw < 0 else 'inherit' }}">{{ play.wp_delta }}</span></div>
+                            <div><span class="play-stat-label-sm">Score Prob.</span> <span class="play-stat-value-sm">{{ play.p_score }}</span></div>
+                        </div>
+                        {% endif %}
                     </div>
                 </a>
                 {% if play.video_link %}
@@ -145,21 +323,21 @@
         {% if total_pages > 1 %}
         <div class="pagination">
             {% if current_page > 1 %}
-            <a href="{{ url_for('plays', team=current_team, decision=current_decision, situation=current_situation, outcome=current_outcome, sort=current_sort, order=current_order, page=current_page-1) }}">Prev</a>
+            <a href="{{ url_for('plays', team=current_team, decision=current_decision, situation=current_situation, outcome=current_outcome, batter=current_batter, runner=current_runner, fielder=current_fielder, sort=current_sort, order=current_order, page=current_page-1) }}">Prev</a>
             {% endif %}
 
             {% for p in range(1, total_pages + 1) %}
                 {% if p == current_page %}
                 <span class="current">{{ p }}</span>
                 {% elif p == 1 or p == total_pages or (p >= current_page - 2 and p <= current_page + 2) %}
-                <a href="{{ url_for('plays', team=current_team, decision=current_decision, situation=current_situation, outcome=current_outcome, sort=current_sort, order=current_order, page=p) }}">{{ p }}</a>
+                <a href="{{ url_for('plays', team=current_team, decision=current_decision, situation=current_situation, outcome=current_outcome, batter=current_batter, runner=current_runner, fielder=current_fielder, sort=current_sort, order=current_order, page=p) }}">{{ p }}</a>
                 {% elif p == current_page - 3 or p == current_page + 3 %}
                 <span style="color: var(--gray-400);">...</span>
                 {% endif %}
             {% endfor %}
 
             {% if current_page < total_pages %}
-            <a href="{{ url_for('plays', team=current_team, decision=current_decision, situation=current_situation, outcome=current_outcome, sort=current_sort, order=current_order, page=current_page+1) }}">Next</a>
+            <a href="{{ url_for('plays', team=current_team, decision=current_decision, situation=current_situation, outcome=current_outcome, batter=current_batter, runner=current_runner, fielder=current_fielder, sort=current_sort, order=current_order, page=current_page+1) }}">Next</a>
             {% endif %}
         </div>
         {% endif %}

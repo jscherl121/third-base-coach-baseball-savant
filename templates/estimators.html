@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}Estimators - Third Base Send Model{% endblock %}
+
+{% block content %}
+<div class="container">
+    <section class="section">
+        <div class="page-header">
+            <h1>Estimated Factors</h1>
+            <p>Many inputs to the scoring probability model are estimated from available Statcast data rather than directly measured. This page documents each estimated factor and how it's calculated.</p>
+        </div>
+
+        <!-- Fielder Positioning -->
+        <div class="callout" style="margin-bottom: var(--space-5);">
+            <h3>Fielder Starting Position</h3>
+            <p><strong>What it is:</strong> Where the outfielder was standing when the ball was hit.</p>
+            <p><strong>Why it's estimated:</strong> Statcast tracks fielder positioning internally but doesn't expose it through public APIs. We derive typical positions from where singles actually land in our dataset.</p>
+            <p><strong>How it's calculated:</strong></p>
+            <ul>
+                <li>Positions are derived empirically from 2024 singles data</li>
+                <li>Fielders are positioned ~25-30 feet shallower than where balls typically land in their zone</li>
+                <li>Left Field: Typical position covers balls landing ~180 ft from home</li>
+                <li>Center Field: Deeper positioning, covers balls landing ~200 ft from home</li>
+                <li>Right Field: Similar depth to left field, ~180 ft coverage</li>
+                <li>Adjustments made for defensive shifts (Strategic, 4th outfielder, etc.)</li>
+            </ul>
+        </div>
+
+        <!-- Hang Time -->
+        <div class="callout" style="margin-bottom: var(--space-5);">
+            <h3>Hang Time</h3>
+            <p><strong>What it is:</strong> Time from bat contact until the ball lands or is caught.</p>
+            <p><strong>Why it's estimated:</strong> Statcast provides launch angle and exit velocity, but not hang time directly for every play.</p>
+            <p><strong>How it's calculated:</strong> Uses projectile motion physics:</p>
+            <ul>
+                <li>Vertical velocity = exit_velocity × sin(launch_angle)</li>
+                <li>Hang time = 2 × vertical_velocity / gravity</li>
+                <li>Ground balls (launch angle < 10°) get a minimum hang time based on distance</li>
+                <li>Clamped to realistic range: 0.5 to 7 seconds</li>
+            </ul>
+        </div>
+
+        <!-- Ball Roll -->
+        <div class="callout" style="margin-bottom: var(--space-5);">
+            <h3>Ball Roll After Landing</h3>
+            <p><strong>What it is:</strong> How far and fast the ball rolls after landing in the outfield.</p>
+            <p><strong>Why it's estimated:</strong> Statcast gives the landing location, but the fielder picks up the ball after it has rolled some distance.</p>
+            <p><strong>How it's calculated:</strong></p>
+            <ul>
+                <li>Initial roll speed depends on launch angle and exit velocity</li>
+                <li>Ground balls maintain more speed (~18-30 ft/s), fly balls lose energy on impact (~3-10 ft/s)</li>
+                <li>Ball decelerates due to grass friction (~8 ft/s²)</li>
+                <li>Typical roll distances: ground balls 25-40 ft, line drives 15-25 ft, fly balls 5-15 ft</li>
+            </ul>
+        </div>
+
+        <!-- Fielding Location -->
+        <div class="callout" style="margin-bottom: var(--space-5);">
+            <h3>Fielding Location (Where Ball is Picked Up)</h3>
+            <p><strong>What it is:</strong> The point where the fielder actually fields the ball.</p>
+            <p><strong>Why it's estimated:</strong> This determines the throw distance to home plate. The ball doesn't stop where it lands.</p>
+            <p><strong>How it's calculated:</strong></p>
+            <ul>
+                <li>If fielder reaches ball during hang time: fielding location = landing location</li>
+                <li>If ball lands first: calculate where fielder intercepts the rolling ball</li>
+                <li>Accounts for fielder sprint speed, reaction time (0.3s), and ball roll trajectory</li>
+                <li>Ball rolls away from home plate (toward outfield fence)</li>
+            </ul>
+        </div>
+
+        <!-- Throw Distance -->
+        <div class="callout" style="margin-bottom: var(--space-5);">
+            <h3>Throw Distance</h3>
+            <p><strong>What it is:</strong> Distance from where the fielder picks up the ball to home plate.</p>
+            <p><strong>Why it's estimated:</strong> Derived from the fielding location, not directly measured.</p>
+            <p><strong>How it's calculated:</strong></p>
+            <ul>
+                <li>Euclidean distance from fielding coordinates to home plate (125, 200 in Statcast coords)</li>
+                <li>Converted to feet using empirically-derived factor of 2.0</li>
+                <li>Typical range: 180-320 feet for outfield singles</li>
+            </ul>
+        </div>
+
+        <!-- Throw Time -->
+        <div class="callout" style="margin-bottom: var(--space-5);">
+            <h3>Throw Time</h3>
+            <p><strong>What it is:</strong> Total time from fielding the ball until it reaches home plate.</p>
+            <p><strong>Why it's estimated:</strong> Statcast provides arm strength but not throw time for every play.</p>
+            <p><strong>How it's calculated:</strong></p>
+            <ul>
+                <li>Transfer time (catch to release): 1.0-1.5 seconds, longer for difficult catches</li>
+                <li>Flight time = throw_distance / (arm_strength × 1.467) × 1.1 (arc factor)</li>
+                <li>Arm strength defaults to 85 mph if not available for that fielder</li>
+            </ul>
+        </div>
+
+        <!-- Runner Delay -->
+        <div class="callout" style="margin-bottom: var(--space-5);">
+            <h3>Runner Delay</h3>
+            <p><strong>What it is:</strong> How long the runner waits before committing to run.</p>
+            <p><strong>Why it's estimated:</strong> Runner behavior varies based on batted ball type and game situation. We don't have tracking data on when runners commit.</p>
+            <p><strong>How it's calculated:</strong></p>
+            <ul>
+                <li><strong>With 2 outs:</strong> Runners go on contact (0.2s delay) regardless of ball type, because a caught ball ends the inning anyway</li>
+                <li><strong>With 0-1 outs, by ball type:</strong> Ground balls (0.3s), line drives (0.8s), fly balls (1.5s), high fly balls (tag up)</li>
+                <li><strong>With 0-1 outs, by catch probability:</strong> If ball is likely to be caught, runner waits longer to avoid being doubled off</li>
+                <li>Final estimate is a weighted combination of both approaches based on launch angle</li>
+            </ul>
+        </div>
+
+        <!-- Scoring Window -->
+        <div class="callout" style="margin-bottom: var(--space-5);">
+            <h3>Runner vs. Throw (Scoring Window)</h3>
+            <p><strong>What it is:</strong> The time margin between when the runner arrives at home and when the throw arrives.</p>
+            <p><strong>Why it's estimated:</strong> Based entirely on other estimated factors.</p>
+            <p><strong>How it's calculated:</strong></p>
+            <ul>
+                <li>Defense time = hang_time + throw_time</li>
+                <li>Runner time = (180 feet / runner_speed) + runner_delay</li>
+                <li>Scoring window = Defense time - Runner time</li>
+                <li>Positive = runner has margin, Negative = throw beats runner</li>
+            </ul>
+            <p><strong>Important:</strong> Even with negative scoring windows, runners score 97% of the time in actual data, suggesting the physics model is conservative or doesn't capture all factors (transfer errors, throw accuracy, etc.).</p>
+        </div>
+
+        <!-- Scoring Probability -->
+        <div class="callout" style="margin-bottom: var(--space-5);">
+            <h3>Scoring Probability</h3>
+            <p><strong>What it is:</strong> The probability that the runner scores if sent.</p>
+            <p><strong>Why it's a model prediction:</strong> This is the core ML model, trained on actual outcomes from 2024 singles data.</p>
+            <p><strong>How it's calculated:</strong> Logistic regression using 22 features:</p>
+            <ul>
+                <li>Batted ball: launch speed, launch angle, hit location, coordinates, distance</li>
+                <li>Game state: outs, leverage index</li>
+                <li>Runner: sprint speed, delay estimates, scoring probability estimates</li>
+                <li>Fielder: arm strength, sprint speed, fielding difficulty, throw difficulty, throw time</li>
+                <li>Timing: hang time, catch probability</li>
+            </ul>
+            <p>The model achieves 0.73 ROC AUC and correctly predicts the 97% overall success rate.</p>
+        </div>
+
+        <!-- Win Probability -->
+        <div class="callout callout-info" style="margin-bottom: var(--space-5);">
+            <h3>Win Probability Values</h3>
+            <p><strong>What it is:</strong> The team's probability of winning the game in each scenario.</p>
+            <p><strong>Source:</strong> These come directly from Statcast/MLB's win probability calculations, not our model.</p>
+            <ul>
+                <li><strong>WP if Send:</strong> Win probability if runner scores × P(score) + Win probability if runner is out × (1 - P(score))</li>
+                <li><strong>WP if Hold:</strong> Win probability with runner on 3rd base (from historical data)</li>
+                <li>Model recommends "Send" when WP_send > WP_hold</li>
+            </ul>
+        </div>
+
+        <!-- Runs Conversion -->
+        <div class="callout" style="margin-bottom: var(--space-5);">
+            <h3>Estimated Runs Impact</h3>
+            <p><strong>What it is:</strong> The estimated run value of a send/hold decision. We provide two metrics that measure this differently.</p>
+            <p><strong>Why we use runs:</strong> Teams often think in terms of runs added or lost rather than win probability. Runs provide a more intuitive metric for evaluating coaching decisions.</p>
+
+            <h4 style="margin-top: var(--space-4); margin-bottom: var(--space-2); color: var(--secondary);">Method 1: Context-Weighted Runs (WP-based)</h4>
+            <p>Accounts for game leverage — a run in a close game is worth more than a run in a blowout.</p>
+            <ul>
+                <li><strong>Formula:</strong> <code>Runs_WP = WP_delta × 10</code></li>
+                <li><strong>WP_delta:</strong> Difference between expected Win Probability if sent vs. held</li>
+                <li><strong>Conversion factor:</strong> 1 win ≈ 10 runs (from historical run differential analysis)</li>
+            </ul>
+            <p><strong>Example:</strong> A WP_delta of 0.05 (5 percentage points) in a tie game in the 9th = <strong>0.5 context-weighted runs</strong></p>
+
+            <h4 style="margin-top: var(--space-4); margin-bottom: var(--space-2); color: var(--secondary);">Method 2: Non-Context-Weighted Runs (RE-based)</h4>
+            <p>Treats all runs equally regardless of game state, using Run Expectancy.</p>
+            <ul>
+                <li><strong>Formula:</strong> <code>Runs_RE = RE_send - RE_hold</code></li>
+                <li><strong>RE_send:</strong> Expected runs from sending = P(score) × 1 + (1 - P(score)) × RE(out at home)</li>
+                <li><strong>RE_hold:</strong> Expected runs with runner on 3B, batter on 1B</li>
+                <li>Run Expectancy values come from historical base-out state tables</li>
+            </ul>
+            <p><strong>Example:</strong> The same play in a tie game or up by 10 has the same RE-based run value.</p>
+
+            <h4 style="margin-top: var(--space-4); margin-bottom: var(--space-2);">When to Use Each</h4>
+            <table style="width: 100%; margin-bottom: var(--space-4);">
+                <thead>
+                    <tr>
+                        <th style="text-align: left; padding: 8px; border-bottom: 2px solid var(--gray-300);">Metric</th>
+                        <th style="text-align: left; padding: 8px; border-bottom: 2px solid var(--gray-300);">Best For</th>
+                        <th style="text-align: left; padding: 8px; border-bottom: 2px solid var(--gray-300);">Limitation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: 8px; border-bottom: 1px solid var(--gray-200);"><strong>Runs/Play (WP)</strong></td>
+                        <td style="padding: 8px; border-bottom: 1px solid var(--gray-200);">Evaluating decision quality when it matters most</td>
+                        <td style="padding: 8px; border-bottom: 1px solid var(--gray-200);">Teams in more close games appear more impactful</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;"><strong>Runs/Play (RE)</strong></td>
+                        <td style="padding: 8px;">Measuring raw run production regardless of context</td>
+                        <td style="padding: 8px;">Doesn't distinguish high-leverage from low-leverage situations</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p><strong>Why rankings differ:</strong> A team might rank highly in WP-based runs if their coaching mistakes happen in blowouts (low impact), while another team's mistakes in close games hurt them more in WP terms despite similar RE values.</p>
+        </div>
+
+        <!-- Data Sources -->
+        <div class="callout" style="margin-bottom: var(--space-5); background: var(--gray-100);">
+            <h3>Data Sources (Not Estimated)</h3>
+            <p>These values come directly from Statcast and are not estimated:</p>
+            <ul>
+                <li><strong>Exit velocity:</strong> Speed off the bat (mph)</li>
+                <li><strong>Launch angle:</strong> Vertical angle of batted ball (degrees)</li>
+                <li><strong>Hit coordinates:</strong> Where the ball landed (hc_x, hc_y)</li>
+                <li><strong>Hit distance:</strong> Statcast's measured hit distance</li>
+                <li><strong>Runner sprint speed:</strong> From Statcast sprint speed leaderboards</li>
+                <li><strong>Fielder arm strength:</strong> From Statcast arm strength leaderboards</li>
+                <li><strong>Game state:</strong> Score, inning, outs, base runners</li>
+            </ul>
+        </div>
+    </section>
+</div>
+{% endblock %}

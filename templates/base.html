@@ -11,14 +11,14 @@
     <header class="header">
         <div class="container header-content">
             <a href="{{ url_for('index') }}" class="logo">
-                <span class="logo-mark">3B</span>
-                <span>Third Base Coach Decision Analysis</span>
+                <span>Third Base Coach Baseball Savant</span>
             </a>
             <nav class="nav">
                 <a href="{{ url_for('index') }}" class="{{ 'active' if request.endpoint == 'index' else '' }}">Overview</a>
                 <a href="{{ url_for('methodology') }}" class="{{ 'active' if request.endpoint in ['methodology', 'calculations'] else '' }}">Methodology</a>
-                <a href="{{ url_for('teams') }}" class="{{ 'active' if request.endpoint == 'teams' else '' }}">Teams</a>
+                <a href="{{ url_for('leaderboards') }}" class="{{ 'active' if request.endpoint == 'leaderboards' else '' }}">Leaderboards</a>
                 <a href="{{ url_for('plays') }}" class="{{ 'active' if request.endpoint in ['plays', 'play_detail'] else '' }}">Plays</a>
+                <a href="{{ url_for('ideal_state') }}" class="{{ 'active' if request.endpoint == 'ideal_state' else '' }}">Ideal State</a>
             </nav>
         </div>
     </header>
@@ -29,7 +29,7 @@
 
     <footer class="footer">
         <div class="container">
-            Third Base Coach Decision Analysis &middot; Win Probability Analysis &middot; 2025 MLB Season &middot; Data from Baseball Savant
+            Third Base Coach Baseball Savant &middot; 2025 MLB Season &middot; Data from Baseball Savant
         </div>
     </footer>
 

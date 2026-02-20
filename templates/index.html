@@ -6,8 +6,8 @@
 <div class="container">
     <section class="section">
         <div class="page-header">
-            <h1>Third Base Coach Decision Analysis</h1>
-            <p style="font-style: italic; color: var(--gray-800); font-size: 1.05rem;">Evaluating third base coach send/hold decisions on singles with a runner on second base, using win probability. 2025 MLB Season.</p>
+            <h1>Third Base Coach Baseball Savant</h1>
+            <p style="font-style: italic; color: var(--gray-800); font-size: 1.05rem;">Evaluating third base coach send/hold decisions on singles with a runner on second base using win probability. 2025 MLB Season.</p>
         </div>
 
         <!-- Key Stats -->
@@ -40,17 +40,17 @@
                 <h3 class="card-title">Explore the Results</h3>
             </div>
             <div class="grid-3">
-                <a href="{{ url_for('teams') }}" class="explore-link">
-                    <h4>Team Rankings</h4>
-                    <p>Compare third base coaching across all 30 teams by Win Probability value.</p>
+                <a href="{{ url_for('leaderboards') }}" class="explore-link">
+                    <h4>Coach Leaderboards</h4>
+                    <p>Compare third base coaches by net runs created and other metrics</p>
                 </a>
                 <a href="{{ url_for('plays', decision='missed') }}" class="explore-link">
                     <h4>Missed Opportunities</h4>
-                    <p>Plays where the coach held but the model recommended sending.</p>
+                    <p>Plays where the coach held the runner but the model recommends sending him</p>
                 </a>
                 <a href="{{ url_for('plays', decision='bad_send') }}" class="explore-link">
                     <h4>Suboptimal Sends</h4>
-                    <p>Plays where WP favored holding but the runner was sent.</p>
+                    <p>Plays where the coach sent the runner but the model recommends holding him</p>
                 </a>
             </div>
         </div>
@@ -63,10 +63,10 @@
                     <h3 class="card-title">Win Probability Framework</h3>
                 </div>
                 <p style="margin-bottom: var(--space-4); color: var(--gray-700);">
-                    Decisions are evaluated using Win Probability, which naturally accounts for game context. A run in a tie game in the 9th is worth more than a run up 5 in the 3rd.
+                    Decisions are evaluated using win probability which naturally accounts for game context. A run in the 9th inning of a tied game is worth more than a run in the 5th inning of a blowout.
                 </p>
                 <div class="formula-block">
-                    WP_send = P(score) &times; WP(scored) + (1-P(score)) &times; WP(out)<br>
+                    WP_send = P(score) &times; WP(scored) + P(out) &times; WP(out)<br>
                     <span style="font-size: 0.85rem; color: var(--gray-600);">Expected win probability if the runner is sent, weighted by the chance they score vs. get thrown out.</span><br><br>
                     WP_hold = WP(runner at 3B)<br>
                     <span style="font-size: 0.85rem; color: var(--gray-600);">Win probability with the runner staying at third base after the single.</span><br><br>
@@ -79,50 +79,45 @@
                 <div class="card-header">
                     <h3 class="card-title">Model Inputs</h3>
                 </div>
-                <div class="feature-grid">
-                    <div class="feature-item">
-                        <div class="feature-icon">S</div>
-                        <div>
-                            <div class="feature-name">Runner Speed</div>
-                            <div class="feature-desc">Sprint speed (ft/s)</div>
-                        </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div>
+                        <div style="font-weight: 600; color: #1f2937; margin-bottom: 8px; font-size: 0.85rem;">Runner & fielder</div>
+                        <ul style="margin: 0; padding-left: 1.25rem; color: #4b5563; font-size: 0.85rem; line-height: 1.7;">
+                            <li>Runner sprint speed</li>
+                            <li>Fielder arm strength</li>
+                            <li>Fielder positioning depth*</li>
+                            <li>Throw distance to home*</li>
+                        </ul>
                     </div>
-                    <div class="feature-item">
-                        <div class="feature-icon">A</div>
-                        <div>
-                            <div class="feature-name">Fielder Arm</div>
-                            <div class="feature-desc">Arm strength (mph)</div>
-                        </div>
+                    <div>
+                        <div style="font-weight: 600; color: #1f2937; margin-bottom: 8px; font-size: 0.85rem;">Batted ball</div>
+                        <ul style="margin: 0; padding-left: 1.25rem; color: #4b5563; font-size: 0.85rem; line-height: 1.7;">
+                            <li>Exit velocity & launch angle</li>
+                            <li>Hit distance & location</li>
+                            <li>Hang time*</li>
+                            <li>Batted ball type</li>
+                        </ul>
                     </div>
-                    <div class="feature-item">
-                        <div class="feature-icon">D</div>
-                        <div>
-                            <div class="feature-name">Throw Distance</div>
-                            <div class="feature-desc">Fielder to home (ft)</div>
-                        </div>
+                    <div>
+                        <div style="font-weight: 600; color: #1f2937; margin-bottom: 8px; font-size: 0.85rem;">Timing</div>
+                        <ul style="margin: 0; padding-left: 1.25rem; color: #4b5563; font-size: 0.85rem; line-height: 1.7;">
+                            <li>Time to field*</li>
+                            <li>Transfer time*</li>
+                            <li>Throw flight time*</li>
+                            <li>Runner travel time*</li>
+                        </ul>
                     </div>
-                    <div class="feature-item">
-                        <div class="feature-icon">B</div>
-                        <div>
-                            <div class="feature-name">Batted Ball</div>
-                            <div class="feature-desc">Type, speed, angle</div>
-                        </div>
-                    </div>
-                    <div class="feature-item">
-                        <div class="feature-icon">T</div>
-                        <div>
-                            <div class="feature-name">Hang Time</div>
-                            <div class="feature-desc">Ball in air (sec)</div>
-                        </div>
-                    </div>
-                    <div class="feature-item">
-                        <div class="feature-icon">G</div>
-                        <div>
-                            <div class="feature-name">Game State</div>
-                            <div class="feature-desc">Score, inning, outs</div>
-                        </div>
+                    <div>
+                        <div style="font-weight: 600; color: #1f2937; margin-bottom: 8px; font-size: 0.85rem;">Game context</div>
+                        <ul style="margin: 0; padding-left: 1.25rem; color: #4b5563; font-size: 0.85rem; line-height: 1.7;">
+                            <li>Outs & inning</li>
+                            <li>Score differential</li>
+                            <li>Runner behavior</li>
+                            <li>Leverage index</li>
+                        </ul>
                     </div>
                 </div>
+                <p style="font-size: 0.75rem; color: #6b7280; margin-top: 1rem;">* Estimated from physics or historical averages</p>
             </div>
         </div>
 

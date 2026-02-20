@@ -14,11 +14,10 @@
         <div class="callout callout-info" style="margin-bottom: var(--space-5);">
             <h4>Column Definitions</h4>
             <ul>
-                <li><strong>Net Runs:</strong> Total coaching value = (runs from correct decisions) - (runs lost from mistakes).</li>
+                <li><strong>Net Runs:</strong> Overall coaching value = (runs from correct decisions) - (runs lost from mistakes).</li>
                 <li><strong>Net Runs/Play:</strong> Net Runs divided by total plays. Normalizes for team sample size.</li>
-                <li><strong>Mistakes:</strong> Total coaching errors = Missed + Bad Sends.</li>
                 <li><strong>Missed:</strong> Coach held when model favored sending and runner was in position.</li>
-                <li><strong>Bad Sends:</strong> Coach sent when model favored holding.</li>
+                <li><strong>Bad Sends:</strong> Coach sent when model favored holding (often in blowout games).</li>
             </ul>
         </div>
 
@@ -29,16 +28,13 @@
                     <tr>
                         <th style="width: 50px; text-align: center;">#</th>
                         <th class="sortable" data-sort="name">Team</th>
-                        <th>Third Base Coach</th>
                         <th class="sortable num" data-sort="plays">Plays</th>
+                        <th class="sortable num" data-sort="correct">% Correct</th>
+                        <th class="sortable num" data-sort="send_rate">Send Rate</th>
                         <th class="sortable num sort-desc" data-sort="net_runs">Net Runs</th>
                         <th class="sortable num" data-sort="net_runs_per_play">Net Runs/Play</th>
-                        <th class="sortable num" data-sort="correct">% Correct</th>
-                        <th class="sortable num" data-sort="total_correct">Correct</th>
-                        <th class="sortable num" data-sort="total_mistakes">Mistakes</th>
                         <th class="sortable num" data-sort="missed">Missed</th>
                         <th class="sortable num" data-sort="bad_sends">Bad Sends</th>
-                        <th class="sortable num" data-sort="send_rate">Send Rate</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -50,10 +46,9 @@
                                 <span class="team-abbr">{{ team.name }}</span>
                             </div>
                         </td>
-                        <td>
-                            <span style="font-size: 0.85rem;">{{ team.coach_name or '—' }}</span>
-                        </td>
                         <td class="num">{{ team.total_plays }}</td>
+                        <td class="num">{{ team.pct_correct }}</td>
+                        <td class="num">{{ team.send_rate }}</td>
                         <td class="num">
                             <span style="color: {{ 'var(--success)' if team.net_runs_raw > 0 else 'var(--danger)' if team.net_runs_raw < 0 else 'inherit' }}; font-weight: 600;">
                                 {{ team.net_runs }}
@@ -64,30 +59,20 @@
                                 {{ team.net_runs_per_play }}
                             </span>
                         </td>
-                        <td class="num">{{ team.pct_correct }}</td>
-                        <td class="num">{{ team.total_correct }}</td>
                         <td class="num">
-                            {% if team.total_mistakes > 0 %}
-                            <span style="color: #b91c1c;">{{ team.total_mistakes }}</span>
-                            {% else %}
-                            <span style="color: var(--gray-400);">0</span>
-                            {% endif %}
-                        </td>
-                        <td class="num" style="font-size: 0.85rem;">
                             {% if team.missed_opportunities > 0 %}
-                            <span style="color: #f87171;">{{ team.missed_opportunities }}</span>
+                            <span style="color: var(--danger);">{{ team.missed_opportunities }}</span>
                             {% else %}
                             <span style="color: var(--gray-400);">0</span>
                             {% endif %}
                         </td>
-                        <td class="num" style="font-size: 0.85rem;">
+                        <td class="num">
                             {% if team.bad_sends > 0 %}
-                            <span style="color: #f87171;">{{ team.bad_sends }}</span>
+                            <span style="color: var(--warning);">{{ team.bad_sends }}</span>
                             {% else %}
                             <span style="color: var(--gray-400);">0</span>
                             {% endif %}
                         </td>
-                        <td class="num">{{ team.send_rate }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -108,7 +93,7 @@ document.querySelectorAll('.sortable').forEach(header => {
         const isDesc = this.classList.contains('sort-desc');
         const isAsc = this.classList.contains('sort-asc');
         // Mistakes columns: lower is better, so default to ascending
-        const lowIsBetter = ['missed', 'bad_sends', 'total_mistakes'].includes(sortKey);
+        const lowIsBetter = ['missed', 'bad_sends'].includes(sortKey);
         let newDir;
         if (lowIsBetter) {
             newDir = isAsc ? 'desc' : 'asc';
@@ -121,7 +106,7 @@ document.querySelectorAll('.sortable').forEach(header => {
         });
         this.classList.add('sort-' + newDir);
 
-        const colIndex = {name: 1, plays: 3, net_runs: 4, net_runs_per_play: 5, correct: 6, total_correct: 7, total_mistakes: 8, missed: 9, bad_sends: 10, send_rate: 11}[sortKey];
+        const colIndex = {name: 1, plays: 2, correct: 3, send_rate: 4, net_runs: 5, net_runs_per_play: 6, missed: 7, bad_sends: 8}[sortKey];
 
         rows.sort((a, b) => {
             const aVal = a.cells[colIndex].textContent.trim();
