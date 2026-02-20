@@ -72,63 +72,57 @@
         border-radius: 6px;
         box-shadow: 0 1px 4px rgba(0,0,0,0.1);
     }
-    .comparison-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-    }
-    .comparison-col {
-        padding: 16px;
-    }
-    .comparison-col:first-child {
-        border-right: 1px solid var(--gray-200);
-    }
-    .comparison-label {
+    .comparison-table {
+        width: 100%;
+        border-collapse: collapse;
         font-size: 0.85rem;
+    }
+    .comparison-table th {
+        background: var(--gray-100);
+        padding: 10px 12px;
+        text-align: left;
         font-weight: 600;
-        margin-bottom: 12px;
-        color: var(--gray-800);
+        color: var(--gray-700);
+        border-bottom: 1px solid var(--gray-200);
     }
-    .metric-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 6px 10px;
-        background: var(--gray-50);
-        border-radius: 4px;
-        margin-bottom: 6px;
-        font-size: 0.85rem;
+    .comparison-table th:first-child {
+        width: 35%;
     }
-    .metric-label {
+    .comparison-table th:not(:first-child) {
+        width: 32.5%;
+        text-align: center;
+    }
+    .comparison-table td {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--gray-100);
+        color: var(--gray-700);
+    }
+    .comparison-table td:first-child {
         color: var(--gray-600);
+        font-weight: 500;
     }
-    .metric-value {
+    .comparison-table td:not(:first-child) {
+        text-align: center;
         font-weight: 600;
-        font-family: var(--font-mono);
-        font-size: 0.85rem;
         color: var(--gray-800);
     }
-    .metric-value.placeholder {
-        color: var(--gray-400);
-        font-style: italic;
-        font-family: inherit;
+    .comparison-table tr:last-child td {
+        border-bottom: none;
     }
-    .metric-value.negative {
+    .comparison-table tr:hover {
+        background: var(--gray-50);
+    }
+    .comparison-table .indent {
+        padding-left: 28px;
+    }
+    .comparison-table .negative {
         color: var(--danger);
     }
-    .metric-value.positive {
+    .comparison-table .positive {
         color: var(--success);
     }
-    .section-takeaway {
-        font-size: 0.85rem;
-        color: var(--gray-600);
-        margin-top: 12px;
-        padding: 10px 12px;
-        background: var(--gray-50);
-        border-left: 3px solid var(--gray-300);
-        border-radius: 0 4px 4px 0;
-    }
-    .section-takeaway strong {
-        color: var(--gray-700);
+    .table-wrapper {
+        padding: 16px;
     }
     .section-takeaway-full {
         font-size: 0.85rem;
@@ -140,56 +134,13 @@
     .section-takeaway-full strong {
         color: var(--gray-700);
     }
-    .recommendation-box {
-        padding: 12px 16px;
-        border-radius: 6px;
-        margin-top: 12px;
-    }
-    .recommendation-box.hold {
-        background: #fef2f2;
-        border: 1px solid #fecaca;
-    }
-    .recommendation-box.send {
-        background: #f0fdf4;
-        border: 1px solid #bbf7d0;
-    }
-    .recommendation-label {
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        margin-bottom: 4px;
-    }
-    .recommendation-box.hold .recommendation-label {
-        color: #991b1b;
-    }
-    .recommendation-box.send .recommendation-label {
-        color: #166534;
-    }
-    .recommendation-value {
-        font-size: 0.9rem;
-        font-weight: 600;
-    }
-    .recommendation-box.hold .recommendation-value {
-        color: #dc2626;
-    }
-    .recommendation-box.send .recommendation-value {
-        color: #16a34a;
-    }
-    .outcome-note {
-        font-size: 0.85rem;
-        color: var(--gray-600);
-        margin-top: 12px;
-        padding-top: 12px;
-        border-top: 1px solid var(--gray-200);
-    }
     @media (max-width: 768px) {
-        .comparison-grid {
-            grid-template-columns: 1fr;
+        .comparison-table {
+            font-size: 0.8rem;
         }
-        .comparison-col:first-child {
-            border-right: none;
-            border-bottom: 1px solid var(--gray-200);
+        .comparison-table th,
+        .comparison-table td {
+            padding: 6px 8px;
         }
     }
 </style>
@@ -229,45 +180,38 @@
             <div class="step-image">
                 <img src="{{ url_for('static', filename='images/twins_1.png') }}" alt="Moment of contact">
             </div>
-            <div class="comparison-grid">
-                <div class="comparison-col">
-                    <div class="comparison-label">Current Model</div>
-                    <div class="metric-row">
-                        <span class="metric-label">Exit velocity</span>
-                        <span class="metric-value">103.5 mph</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Launch angle</span>
-                        <span class="metric-value">10°</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Hit distance</span>
-                        <span class="metric-value">220 ft</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Landing location</span>
-                        <span class="metric-value">Left field</span>
-                    </div>
-                </div>
-                <div class="comparison-col">
-                    <div class="comparison-label">With Player Tracking</div>
-                    <div class="metric-row">
-                        <span class="metric-label">Exit velocity</span>
-                        <span class="metric-value">103.5 mph</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Launch angle</span>
-                        <span class="metric-value">10°</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Hit distance</span>
-                        <span class="metric-value">220 ft</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Landing location</span>
-                        <span class="metric-value">Left field</span>
-                    </div>
-                </div>
+            <div class="table-wrapper">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Current Model</th>
+                            <th>With Player Tracking</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Exit Velocity</td>
+                            <td>103.5 mph</td>
+                            <td>103.5 mph</td>
+                        </tr>
+                        <tr>
+                            <td>Launch Angle</td>
+                            <td>10°</td>
+                            <td>10°</td>
+                        </tr>
+                        <tr>
+                            <td>Hit Distance</td>
+                            <td>220 ft</td>
+                            <td>220 ft</td>
+                        </tr>
+                        <tr>
+                            <td>Landing Location</td>
+                            <td>Left field</td>
+                            <td>Left field</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
             <div class="section-takeaway-full">
                 <strong>Takeaway:</strong> Batted ball information is present in both, although it will be relied upon more frequently in the current model.
@@ -283,43 +227,36 @@
             <div class="step-image">
                 <img src="{{ url_for('static', filename='images/twins_2.png') }}" alt="Runner reacting to ball">
             </div>
-            <div class="comparison-grid">
-                <div class="comparison-col">
-                    <div class="comparison-label">Current Model</div>
-                    <div class="metric-row">
-                        <span class="metric-label">Runner Reaction (Est.)</span>
-                        <span class="metric-value">On Contact</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Runner Delay (Est.)</span>
-                        <span class="metric-value">0.8s</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Runner lead distance</span>
-                        <span class="metric-value">Unknown</span>
-                    </div>
-                    <div class="section-takeaway">
-                        <strong>Takeaway:</strong> The model does not know the runner's lead distance or reaction time to the hit. Additionally, it assumes the runner hesitated for 0.8 seconds because it was a line drive with fewer than two outs.
-                    </div>
-                </div>
-                <div class="comparison-col">
-                    <div class="comparison-label">With Player Tracking</div>
-                    <div class="metric-row">
-                        <span class="metric-label">Runner Reaction</span>
-                        <span class="metric-value">Observed</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Runner Delay</span>
-                        <span class="metric-value">Measured</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Runner lead distance</span>
-                        <span class="metric-value">Measured</span>
-                    </div>
-                    <div class="section-takeaway">
-                        <strong>Takeaway:</strong> The runner's lead distance, reaction time, and potential delay is directly measured.
-                    </div>
-                </div>
+            <div class="table-wrapper">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Current Model</th>
+                            <th>With Player Tracking</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Runner Reaction</td>
+                            <td>On Contact (Est.)</td>
+                            <td>Observed</td>
+                        </tr>
+                        <tr>
+                            <td>Runner Delay</td>
+                            <td>0.8s (Est.)</td>
+                            <td>Measured</td>
+                        </tr>
+                        <tr>
+                            <td>Runner Lead Distance</td>
+                            <td>Unknown</td>
+                            <td>Measured</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="section-takeaway-full">
+                <strong>Takeaway:</strong> The model does not know the runner's lead distance or reaction time to the hit. Additionally, it assumes the runner hesitated for 0.8 seconds because it was a line drive with fewer than two outs.
             </div>
         </div>
 
@@ -332,59 +269,46 @@
             <div class="step-image">
                 <img src="{{ url_for('static', filename='images/twins_3.png') }}" alt="Fielder picking up the ball">
             </div>
-            <div class="comparison-grid">
-                <div class="comparison-col">
-                    <div class="comparison-label">Current Model</div>
-                    <div class="metric-row">
-                        <span class="metric-label">Fielder starting location (est.)</span>
-                        <span class="metric-value">297 ft (player season avg)</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Time to field (est.)</span>
-                        <span class="metric-value">1.88s</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Throw distance (est.)</span>
-                        <span class="metric-value">302 ft</span>
-                    </div>
-                    <div class="metric-row" style="margin-left: 16px;">
-                        <span class="metric-label">Throw time (est.)</span>
-                        <span class="metric-value">3.54s</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Scoring window (est.)</span>
-                        <span class="metric-value positive">+0.71s</span>
-                    </div>
-                    <div class="section-takeaway">
-                        <strong>Takeaway:</strong> With behavior and movement patterns estimated for the players, the model believes Bader will beat the throw by 0.71 seconds, giving him an 86% chance to score.
-                    </div>
-                </div>
-                <div class="comparison-col">
-                    <div class="comparison-label">With Player Tracking</div>
-                    <div class="metric-row">
-                        <span class="metric-label">Fielder starting location</span>
-                        <span class="metric-value">Measured</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Time to field</span>
-                        <span class="metric-value">Measured</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Throw distance</span>
-                        <span class="metric-value">Measured</span>
-                    </div>
-                    <div class="metric-row" style="margin-left: 16px;">
-                        <span class="metric-label">Throw time</span>
-                        <span class="metric-value">Estimated from accurate throw distance</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Scoring window</span>
-                        <span class="metric-value">Estimated from accurate throw distance</span>
-                    </div>
-                    <div class="section-takeaway">
-                        <strong>Takeaway:</strong> Knowing that Bader had already rounded third base at the moment the left fielder played the ball, the model would have provided a significantly higher likelihood to score.
-                    </div>
-                </div>
+            <div class="table-wrapper">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Current Model</th>
+                            <th>With Player Tracking</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Fielder Starting Location</td>
+                            <td>297 ft (Est., player season avg)</td>
+                            <td>Measured</td>
+                        </tr>
+                        <tr>
+                            <td>Time to Field</td>
+                            <td>1.88s (Est.)</td>
+                            <td>Measured</td>
+                        </tr>
+                        <tr>
+                            <td>Throw Distance</td>
+                            <td>302 ft (Est.)</td>
+                            <td>Measured</td>
+                        </tr>
+                        <tr>
+                            <td class="indent">Throw Time</td>
+                            <td>3.54s (Est.)</td>
+                            <td>Est. from accurate distance</td>
+                        </tr>
+                        <tr>
+                            <td>Scoring Window</td>
+                            <td class="positive">+0.71s (Est.)</td>
+                            <td>Est. from accurate distance</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="section-takeaway-full">
+                <strong>Takeaway:</strong> With behavior and movement patterns estimated for the players, the model believes Bader will beat the throw by 0.71 seconds, giving him an 86% chance to score.
             </div>
         </div>
 
@@ -394,59 +318,46 @@
                 <div class="step-number">4</div>
                 <div class="step-title">Model Recommendation</div>
             </div>
-            <div class="comparison-grid">
-                <div class="comparison-col">
-                    <div class="comparison-label">Current Model</div>
-                    <div class="metric-row">
-                        <span class="metric-label">Scoring probability</span>
-                        <span class="metric-value">74.5%</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">WP if send</span>
-                        <span class="metric-value">61.7%</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">WP if hold</span>
-                        <span class="metric-value">98.9%</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">WP delta</span>
-                        <span class="metric-value negative">-37.1%</span>
-                    </div>
-                    <div class="recommendation-box hold">
-                        <div class="recommendation-label">Recommendation</div>
-                        <div class="recommendation-value">Hold the runner</div>
-                    </div>
-                    <div class="outcome-note">
-                        <strong>Actual outcome:</strong> Coach sent runner. Harrison Bader scored. Model classifies this as a suboptimal send due to the risk involved.
-                    </div>
-                </div>
-                <div class="comparison-col">
-                    <div class="comparison-label">With Player Tracking</div>
-                    <div class="metric-row">
-                        <span class="metric-label">Scoring probability</span>
-                        <span class="metric-value">Higher than estimated</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">WP if send</span>
-                        <span class="metric-value">Recalculated</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">WP if hold</span>
-                        <span class="metric-value">98.9%</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">WP delta</span>
-                        <span class="metric-value">Closer to zero or positive</span>
-                    </div>
-                    <div class="recommendation-box send">
-                        <div class="recommendation-label">Likely Recommendation</div>
-                        <div class="recommendation-value">Send the runner</div>
-                    </div>
-                    <div class="outcome-note">
-                        With player tracking showing Bader's advanced position, the model would likely recommend sending—aligning with what actually happened and the successful outcome.
-                    </div>
-                </div>
+            <div class="table-wrapper">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Current Model</th>
+                            <th>With Player Tracking</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Scoring Probability</td>
+                            <td>74.5%</td>
+                            <td>Higher than estimated</td>
+                        </tr>
+                        <tr>
+                            <td>WP if Send</td>
+                            <td>61.7%</td>
+                            <td>Recalculated</td>
+                        </tr>
+                        <tr>
+                            <td>WP if Hold</td>
+                            <td>98.9%</td>
+                            <td>98.9%</td>
+                        </tr>
+                        <tr>
+                            <td>WP Delta</td>
+                            <td class="negative">-37.1%</td>
+                            <td>Closer to zero or positive</td>
+                        </tr>
+                        <tr>
+                            <td>Recommendation</td>
+                            <td style="color: #dc2626; font-weight: 700;">Hold the runner</td>
+                            <td style="color: #16a34a; font-weight: 700;">Send the runner</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="section-takeaway-full">
+                <strong>Actual outcome:</strong> Coach sent runner. Harrison Bader scored. The current model classifies this as a suboptimal send due to the risk involved, but with player tracking showing Bader's advanced position, the model would likely recommend sending—aligning with the successful outcome.
             </div>
         </div>
     </section>
