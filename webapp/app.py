@@ -3,6 +3,8 @@ Third Base Send Model - Web Application
 
 A professional dashboard for analyzing third base coach decisions
 using Win Probability analysis.
+
+Updated: Feb 2026
 """
 
 import os
@@ -309,40 +311,6 @@ def load_data():
 
 DATA = load_data()
 
-# Pre-compute player lists for filters (computed once at startup)
-def extract_player_lists():
-    """Extract unique player names from the plays data."""
-    plays_df = DATA.get("plays", pd.DataFrame())
-    if len(plays_df) == 0:
-        return {"batters": [], "runners": [], "fielders": []}
-
-    singles = plays_df[plays_df["event_type"] == "single"]
-
-    # Extract batter names from description ("Aaron Judge singles on...")
-    def get_batter(desc):
-        match = re.match(r'^([A-Z][a-zA-Z\.\'\-]+ [A-Z][a-zA-Z\.\'\-]+) (?:singles|doubles|triples|homers)', str(desc))
-        return match.group(1) if match else None
-
-    batters = sorted([x for x in set(singles["des"].apply(get_batter).tolist()) if isinstance(x, str)])
-
-    # Extract runner names from description
-    def get_runner(desc):
-        match = re.search(r'([A-Z][a-zA-Z\.\'\-]+ [A-Z][a-zA-Z\.\'\-]+) (?:to 3rd|scores)', str(desc))
-        return match.group(1) if match else None
-
-    runners = sorted([x for x in set(singles["des"].apply(get_runner).tolist()) if isinstance(x, str)])
-
-    # Extract fielder names from description
-    def get_fielder(desc):
-        match = re.search(r'(?:left|right|center) fielder ([A-Z][a-zA-Z\.\'\- ]+?)(?:\.|,)', str(desc))
-        return match.group(1).strip() if match else None
-
-    fielders = sorted([x for x in set(singles["des"].apply(get_fielder).tolist()) if isinstance(x, str)])
-
-    return {"batters": batters, "runners": runners, "fielders": fielders}
-
-PLAYER_LISTS = extract_player_lists()
-
 # Cache for MLB API playId lookups: (game_pk, at_bat_number) -> playId UUID
 _play_id_cache = {}
 _play_id_cache_lock = threading.Lock()
@@ -448,17 +416,6 @@ def get_decision_color(decision_quality):
 
 def prepare_play_data(row):
     """Prepare a single play's data for display."""
-    # Extract player names from description
-    desc = str(row.get("des", ""))
-
-    # Runner name - look for "Name to 3rd" or "Name scores"
-    runner_match = re.search(r'\.?\s*([A-Z][a-zA-Z\.\'\-]+ [A-Z][a-zA-Z\.\'\-]+)\s+(?:to 3rd|scores)', desc)
-    runner_name = runner_match.group(1) if runner_match else "—"
-
-    # Fielder name - look for "left/right/center fielder Name"
-    fielder_match = re.search(r'(?:left|right|center) fielder ([A-Z][a-zA-Z\.\'\- ]+?)(?:\.|,|\s+to\s)', desc)
-    fielder_name = fielder_match.group(1).strip() if fielder_match else "—"
-
     play = {
         "id": int(row.name) if hasattr(row, 'name') else 0,
         # Game context
@@ -493,8 +450,8 @@ def prepare_play_data(row):
         "event_type": row.get("event_type", "single"),
         "launch_speed": format_number(row.get("launch_speed"), 1),
         "launch_angle": format_number(row.get("launch_angle"), 1),
-        "batted_ball_type": row.get("batted_ball_type", "—").replace("_", " ").capitalize() if row.get("batted_ball_type") else "—",
-        "hit_location": {7: "LF", 8: "CF", 9: "RF"}.get(int(row.get("hit_location", 0)) if pd.notna(row.get("hit_location")) else 0, "—"),
+        "batted_ball_type": row.get("batted_ball_type", "—"),
+        "hit_location": int(row.get("hit_location", 0)) if pd.notna(row.get("hit_location")) else "—",
 
         # Timing
         "hang_time": format_number(row.get("hang_time"), 2),
@@ -503,14 +460,12 @@ def prepare_play_data(row):
         "scoring_window_raw": row.get("scoring_window", 0),
 
         # Player attributes
-        "runner_name": runner_name,
         "runner_speed": format_number(row.get("runner_speed"), 1),
-        "fielder_name": fielder_name,
         "fielder_arm": format_number(row.get("fielder_arm_strength"), 1),
-        "throw_distance": format_number(row.get("throw_distance_from_fielding"), 0),
+        "throw_distance": format_number(row.get("fielding_dist_from_home"), 0),
 
         # Runner behavior
-        "runner_behavior": row.get("runner_behavior", "—").replace("_", " ").capitalize() if row.get("runner_behavior") else "—",
+        "runner_behavior": row.get("runner_behavior", "—"),
         "had_opportunity": bool(row.get("had_scoring_opportunity", False)),
 
         # Outcome
@@ -611,12 +566,6 @@ def index():
 def methodology():
     """Methodology page explaining the model."""
     return render_template("methodology.html")
-
-
-@app.route("/ideal-state")
-def ideal_state():
-    """Ideal state page comparing current model to player tracking version."""
-    return render_template("ideal_state.html")
 
 
 @app.route("/calculations")
@@ -733,80 +682,6 @@ def teams():
     return render_template("teams.html", teams=teams_list)
 
 
-@app.route("/leaderboards")
-def leaderboards():
-    """Coach leaderboards page."""
-    teams_df = DATA.get("teams", pd.DataFrame())
-    plays_df = DATA.get("plays", pd.DataFrame())
-
-    if len(teams_df) == 0:
-        return render_template("teams2.html", teams=[])
-
-    # Pre-calculate stats from reclassified plays data
-    singles = plays_df[plays_df["event_type"] == "single"] if len(plays_df) > 0 else pd.DataFrame()
-    team_reclassified_stats = {}
-    if len(singles) > 0:
-        for team_code in singles["batting_team"].unique():
-            team_plays = singles[singles["batting_team"] == team_code]
-            correct_plays = team_plays[team_plays["decision_correct"] == True]
-            mistake_plays = team_plays[team_plays["decision_correct"] == False]
-            correct_value = correct_plays["WP_delta"].abs().sum() * 10 if len(correct_plays) > 0 else 0
-            mistake_cost = mistake_plays["WP_delta"].abs().sum() * 10 if len(mistake_plays) > 0 else 0
-            net_runs = correct_value - mistake_cost
-
-            missed = len(team_plays[team_plays["coach_decision_quality"] == "missed_opportunity"])
-            bad_sends = len(team_plays[team_plays["coach_decision_quality"] == "bad_send"])
-            total_correct = int(team_plays["decision_correct"].sum()) if len(team_plays) > 0 else 0
-            pct_correct = team_plays["decision_correct"].mean() if len(team_plays) > 0 else 0
-
-            send_rate = team_plays["was_sent"].mean() if len(team_plays) > 0 else 0
-
-            team_reclassified_stats[team_code] = {
-                "missed": missed,
-                "bad_sends": bad_sends,
-                "total_mistakes": missed + bad_sends,
-                "total_correct": total_correct,
-                "pct_correct": pct_correct,
-                "net_runs": net_runs,
-                "send_rate": send_rate,
-            }
-
-    teams_list = []
-    for _, row in teams_df.iterrows():
-        team_code = row.get("batting_team", "—")
-        reclassified = team_reclassified_stats.get(team_code, {"missed": 0, "bad_sends": 0, "total_mistakes": 0, "total_correct": 0, "pct_correct": 0, "net_runs": 0, "send_rate": 0})
-        net_runs = reclassified["net_runs"]
-        total_plays = int(row.get("total_plays", 1))
-        coach_name = THIRD_BASE_COACHES.get(team_code)
-
-        team = {
-            "name": team_code,
-            "coach_name": coach_name or "—",
-            "net_runs_raw": net_runs,
-            "net_runs_per_play_raw": net_runs / total_plays if total_plays > 0 else 0,
-            "total_mistakes": reclassified["total_mistakes"],
-            "missed_opportunities": reclassified["missed"],
-            "bad_sends": reclassified["bad_sends"],
-            "pct_correct_raw": reclassified["pct_correct"],
-            "send_rate_raw": reclassified["send_rate"],
-        }
-        teams_list.append(team)
-
-    # Calculate Net Runs+ (normalized to 100 as average)
-    if len(teams_list) > 0:
-        avg_net_runs = sum(t["net_runs_raw"] for t in teams_list) / len(teams_list)
-        for team in teams_list:
-            team["net_runs_plus"] = 100 + (team["net_runs_raw"] - avg_net_runs)
-    else:
-        for team in teams_list:
-            team["net_runs_plus"] = 100
-
-    # Sort by net runs (descending) by default
-    teams_list.sort(key=lambda x: x["net_runs_raw"], reverse=True)
-
-    return render_template("teams2.html", teams=teams_list)
-
-
 @app.route("/team/<team_code>")
 def team_detail(team_code):
     """Individual team detail page."""
@@ -863,13 +738,9 @@ def team_detail(team_code):
     mistake_cost = mistake_plays["WP_delta"].abs().sum() * 10 if len(mistake_plays) > 0 else 0
     net_runs = correct_value - mistake_cost
 
-    # Get coach name
-    coach_name = THIRD_BASE_COACHES.get(team_code, "Unknown")
-
     team = {
         "name": team_code,
         "full_name": team_names.get(team_code, team_code),
-        "coach_name": coach_name,
         "total_plays": int(team_row.get("total_plays", 0)),
         "plays_sent": int(team_row.get("plays_sent", 0)),
         "plays_held": int(team_row.get("plays_held", 0)),
@@ -899,54 +770,6 @@ def team_detail(team_code):
         team["worst_holds"][i]["id"] = idx
     for i, (idx, _) in enumerate(worst_sends.iterrows()):
         team["worst_sends"][i]["id"] = idx
-
-    # Generate scouting report
-    missed = len(missed_opps)
-    bad_sends = len(bad_sends_plays)
-    total_mistakes = missed + bad_sends
-    pct = pct_correct_reclassified * 100
-
-    # Use team code hash for deterministic variety
-    variety_seed = sum(ord(c) for c in team_code) % 3
-
-    # Build scouting report based on performance tier and mistake profile
-    if net_runs > 40:
-        if variety_seed == 0:
-            report = f"Elite decision-maker who ranks among the league's best, converting {pct:.0f}% of situations correctly."
-        elif variety_seed == 1:
-            report = f"Exceptional read on send/hold situations with a {pct:.0f}% success rate and minimal costly errors."
-        else:
-            report = f"Top-tier performer whose aggressive-yet-calculated approach maximizes run production."
-    elif net_runs > 20:
-        if missed > bad_sends * 1.5:
-            report = f"Strong overall numbers but leaves some runs on the table—{missed} missed opportunities suggest room to be more aggressive."
-        elif bad_sends > missed * 1.5:
-            report = f"Solid performer who occasionally pushes the envelope too far, resulting in {bad_sends} suboptimal sends."
-        else:
-            report = f"Reliable decision-maker with a {pct:.0f}% accuracy rate and well-balanced risk management."
-    elif net_runs > 0:
-        if missed > bad_sends * 1.5:
-            report = f"Conservative approach limits mistakes but also limits upside—{missed} missed opportunities outpace {bad_sends} bad sends."
-        elif bad_sends > missed * 1.5:
-            report = f"Aggressive tendencies create value but also risk—{bad_sends} questionable sends offset by willingness to push runners."
-        else:
-            report = f"Middle-of-the-pack performer with {total_mistakes} total mistakes split fairly evenly between caution and aggression."
-    elif net_runs > -20:
-        if missed > bad_sends * 1.5:
-            report = f"Overly cautious approach is costing runs—{missed} missed opportunities indicate reluctance to send in scoreable situations."
-        elif bad_sends > missed * 1.5:
-            report = f"Aggression without precision—{bad_sends} ill-timed sends have hurt the club more than the {missed} missed chances."
-        else:
-            report = f"Below-average results with mistakes on both ends: {missed} missed opportunities and {bad_sends} bad sends."
-    else:
-        if missed > bad_sends * 1.5:
-            report = f"Among the league's most conservative coaches, with {missed} missed opportunities suggesting a fundamental misread of scoring chances."
-        elif bad_sends > missed * 1.5:
-            report = f"High-risk approach has backfired—{bad_sends} bad sends place him among the league's costliest decision-makers."
-        else:
-            report = f"Struggles at both ends with {missed} missed opportunities and {bad_sends} bad sends, ranking near the bottom leaguewide."
-
-    team["scouting_report"] = report
 
     # League averages for comparison (calculate from reclassified plays data for consistency)
     league_avg = {}
@@ -998,45 +821,19 @@ def plays():
     if len(plays_df) > 0:
         plays_df = plays_df[plays_df["event_type"] == "single"].copy()
 
-    # Get filter parameters (treat empty string as "all")
-    team = request.args.get("team", "all") or "all"
-    decision_type = request.args.get("decision", "all") or "all"
-    situation = request.args.get("situation", "all") or "all"
-    outcome = request.args.get("outcome", "all") or "all"
-    batter = request.args.get("batter", "all") or "all"
-    runner = request.args.get("runner", "all") or "all"
-    fielder = request.args.get("fielder", "all") or "all"
+    # Get filter parameters
+    team = request.args.get("team", "all")
+    decision_type = request.args.get("decision", "all")
+    situation = request.args.get("situation", "all")
+    outcome = request.args.get("outcome", "all")
     sort_by = request.args.get("sort", "wp_delta")
     sort_order = request.args.get("order", "desc")
     page = int(request.args.get("page", 1))
     per_page = 25
 
-    # Helper functions to extract player names from description
-    def extract_batter_name(desc):
-        match = re.match(r'^([A-Z][a-zA-Z\.\'\-]+ [A-Z][a-zA-Z\.\'\-]+) (?:singles|doubles|triples|homers)', str(desc))
-        return match.group(1) if match else None
-
-    def extract_runner_name(desc):
-        match = re.search(r'([A-Z][a-zA-Z\.\'\-]+ [A-Z][a-zA-Z\.\'\-]+) (?:to 3rd|scores)', str(desc))
-        return match.group(1) if match else None
-
-    def extract_fielder_name(desc):
-        match = re.search(r'(?:left|right|center) fielder ([A-Z][a-zA-Z\.\'\- ]+?)(?:\.|,)', str(desc))
-        return match.group(1).strip() if match else None
-
     # Apply filters
     if team != "all" and len(plays_df) > 0:
         plays_df = plays_df[plays_df["batting_team"] == team]
-
-    # Player filters
-    if batter != "all" and len(plays_df) > 0:
-        plays_df = plays_df[plays_df["des"].apply(extract_batter_name) == batter]
-
-    if runner != "all" and len(plays_df) > 0:
-        plays_df = plays_df[plays_df["des"].apply(extract_runner_name) == runner]
-
-    if fielder != "all" and len(plays_df) > 0:
-        plays_df = plays_df[plays_df["des"].apply(extract_fielder_name) == fielder]
 
     if decision_type != "all" and len(plays_df) > 0:
         if decision_type == "mistakes":
@@ -1054,10 +851,6 @@ def plays():
                 sort_order = "asc"
         elif decision_type == "correct":
             plays_df = plays_df[plays_df["coach_decision_quality"].isin(["correct_send", "correct_hold"])]
-        elif decision_type == "correct_send":
-            plays_df = plays_df[plays_df["coach_decision_quality"] == "correct_send"]
-        elif decision_type == "correct_hold":
-            plays_df = plays_df[plays_df["coach_decision_quality"] == "correct_hold"]
 
     # Situation filter (Late & Close, High Leverage)
     if situation != "all" and len(plays_df) > 0:
@@ -1103,65 +896,24 @@ def plays():
     start_idx = (page - 1) * per_page
     end_idx = start_idx + per_page
 
-    # Prepare plays for display with percentile calculations
-    all_singles = DATA.get("plays", pd.DataFrame())
-    all_singles = all_singles[all_singles["event_type"] == "single"] if len(all_singles) > 0 else pd.DataFrame()
-
-    # Pre-compute sorted arrays for percentile lookups (more efficient)
-    if len(all_singles) > 0:
-        p_score_sorted = all_singles["p_conservative"].dropna().sort_values().values
-        sw_sorted = all_singles["scoring_window"].dropna().sort_values().values
-        # For WP delta, we need to use decision-adjusted values
-        wp_delta_series = all_singles.apply(
-            lambda r: r["WP_delta"] if r["was_sent"] else -r["WP_delta"], axis=1
-        )
-        wp_delta_sorted = wp_delta_series.sort_values().values
-
+    # Prepare plays for display
     plays_list = []
     for idx, row in plays_df.iloc[start_idx:end_idx].iterrows():
         play = prepare_play_data(row)
         play["id"] = idx
-
-        # Calculate percentiles for visualization using binary search
-        if len(all_singles) > 0:
-            import numpy as np
-            # WP delta percentile
-            wp_delta_val = row.get("WP_delta", 0) if row.get("was_sent", False) else -row.get("WP_delta", 0)
-            play["wp_delta_pct"] = round(np.searchsorted(wp_delta_sorted, wp_delta_val) / len(wp_delta_sorted) * 100, 1)
-
-            # P(score) percentile
-            p_score_val = row.get("p_conservative", 0)
-            play["p_score_pct"] = round(np.searchsorted(p_score_sorted, p_score_val) / len(p_score_sorted) * 100, 1)
-
-            # Scoring window percentile
-            sw_val = row.get("scoring_window", 0)
-            play["scoring_window_pct"] = round(np.searchsorted(sw_sorted, sw_val) / len(sw_sorted) * 100, 1)
-        else:
-            play["wp_delta_pct"] = 50
-            play["p_score_pct"] = 50
-            play["scoring_window_pct"] = 50
-
         plays_list.append(play)
 
-    # Get unique values for filters (use cached player lists)
-    all_plays = DATA.get("plays", pd.DataFrame())
-    all_singles_for_filters = all_plays[all_plays["event_type"] == "single"] if len(all_plays) > 0 else pd.DataFrame()
-    all_teams = sorted(all_singles_for_filters["batting_team"].unique()) if len(all_singles_for_filters) > 0 else []
+    # Get unique teams for filter
+    all_teams = sorted(DATA.get("plays", pd.DataFrame())["batting_team"].unique()) if len(DATA.get("plays", pd.DataFrame())) > 0 else []
 
     return render_template(
         "plays.html",
         plays=plays_list,
         teams=all_teams,
-        batters=PLAYER_LISTS["batters"],
-        runners=PLAYER_LISTS["runners"],
-        fielders=PLAYER_LISTS["fielders"],
         current_team=team,
         current_decision=decision_type,
         current_situation=situation,
         current_outcome=outcome,
-        current_batter=batter,
-        current_runner=runner,
-        current_fielder=fielder,
         current_sort=sort_by,
         current_order=sort_order,
         current_page=page,
@@ -1573,21 +1325,6 @@ def play_detail(play_id):
                 decision_explanation = f"The model recommends holding due to {factors_text}. While the runner scored on this play, the decision carried more risk than was warranted by the win probability impact."
             else:
                 decision_explanation = f"The model recommends holding due to {factors_text}. Keeping the runner at third preserves a scoring opportunity without risking an out."
-
-    # Add percentiles for sidebar display
-    speed = row.get("runner_speed", None)
-    if pd.notna(speed) and len(singles) > 0:
-        pct = int(round(compute_percentile(singles["runner_speed"], speed)))
-        play["runner_speed_pct"] = ordinal(pct)
-    else:
-        play["runner_speed_pct"] = None
-
-    arm = row.get("fielder_arm_strength", None)
-    if pd.notna(arm) and len(singles) > 0:
-        pct = int(round(compute_percentile(singles["fielder_arm_strength"], arm)))
-        play["fielder_arm_pct"] = ordinal(pct)
-    else:
-        play["fielder_arm_pct"] = None
 
     return render_template("play_detail.html", play=play, factors_send=factors_send, factors_hold=factors_hold, decision_explanation=decision_explanation)
 

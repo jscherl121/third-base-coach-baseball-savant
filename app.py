@@ -462,7 +462,7 @@ def prepare_play_data(row):
         # Player attributes
         "runner_speed": format_number(row.get("runner_speed"), 1),
         "fielder_arm": format_number(row.get("fielder_arm_strength"), 1),
-        "throw_distance": format_number(row.get("throw_distance_from_fielding"), 0),
+        "throw_distance": format_number(row.get("fielding_dist_from_home"), 0),
 
         # Runner behavior
         "runner_behavior": row.get("runner_behavior", "—"),
