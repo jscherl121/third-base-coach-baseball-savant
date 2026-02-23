@@ -574,8 +574,14 @@ def calculations():
     return render_template("calculations.html")
 
 
+@app.route("/ideal-state")
+def ideal_state():
+    """Ideal state page comparing current model to player tracking."""
+    return render_template("ideal_state.html")
+
+
 @app.route("/teams")
-def teams():
+def leaderboards():
     """Team rankings page."""
     teams_df = DATA.get("teams", pd.DataFrame())
     plays_df = DATA.get("plays", pd.DataFrame())
